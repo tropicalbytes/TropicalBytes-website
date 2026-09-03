@@ -30,14 +30,14 @@ export default function Navbar() {
       }`}
     >
       <div className="mx-auto flex max-w-content items-center justify-between px-5 py-3 md:px-8">
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-3">
           <Image
             src="/brand/tropicalbytes-logo.png"
             alt=""
             aria-hidden="true"
-            width={40}
-            height={40}
-            className="h-10 w-10 shrink-0"
+            width={56}
+            height={56}
+            className="h-12 w-12 shrink-0 sm:h-14 sm:w-14"
             priority
           />
           <Image
@@ -45,7 +45,7 @@ export default function Navbar() {
             alt={business.name}
             width={1126}
             height={286}
-            className="h-6 w-auto sm:h-7"
+            className="h-8 w-auto sm:h-9 md:h-10"
             priority
           />
         </Link>

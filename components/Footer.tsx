@@ -7,16 +7,16 @@ export default function Footer() {
     <footer className="bg-forest-dark text-cream/90">
       <div className="mx-auto grid max-w-content gap-10 px-5 py-14 md:grid-cols-4 md:px-8">
         <div>
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white p-1">
-              <Image src="/brand/tropicalbytes-logo.png" alt="" aria-hidden="true" width={32} height={32} className="h-full w-full" />
+          <div className="flex items-center gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white p-1">
+              <Image src="/brand/tropicalbytes-logo.png" alt="" aria-hidden="true" width={36} height={36} className="h-full w-full" />
             </span>
             <Image
               src="/brand/tropicalbytes-wordmark-white.png"
               alt={business.name}
               width={1126}
               height={286}
-              className="h-6 w-auto"
+              className="h-7 w-auto sm:h-8"
             />
           </div>
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-cream/70 text-justify">
