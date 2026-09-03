@@ -36,20 +36,6 @@ export default function Footer() {
                 <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" />
               </svg>
             </a>
-            <a
-              href={business.social.facebook}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Facebook"
-              className="grid h-9 w-9 place-items-center rounded-full bg-cream/10 text-cream/80 transition-colors hover:bg-yellow hover:text-ink"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M14 8.5h2V5h-2c-2.2 0-4 1.8-4 4v2H8v3.5h2V21h3.5v-6.5H16l.5-3.5h-3V9c0-.55.45-1 1-1Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </a>
           </div>
         </div>
 
