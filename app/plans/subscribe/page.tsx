@@ -62,7 +62,7 @@ const initialState: FormState = {
   honeypot: "",
 };
 
-const STEPS = ["Your Details", "Plan & Preferences", "Meals & Add-ons", "Delivery Details", "Review & Submit"];
+const STEPS = ["Plan & Preferences", "Your Details", "Meals & Add-ons", "Delivery Details", "Review & Submit"];
 const addOnGroups = buildAddOnOptionGroups();
 const MEAL_COUNT_OPTIONS = [
   { value: "1", label: "1 Meal" },
@@ -107,20 +107,20 @@ function SubscribeForm() {
 
   const stepRules: Record<number, { rules: Record<string, Array<(v: string) => boolean>>; messages: Record<string, string> }> = {
     0: {
-      rules: { fullName: [isRequired, maxLength(MAX_LENGTHS.name)], phone: [isRequired, isValidPhone], email: [isRequired, isValidEmail] },
-      messages: {
-        fullName: "Please enter your full name.",
-        phone: "Enter a valid 10-digit phone number.",
-        email: "Enter a valid email address.",
-      },
-    },
-    1: {
       rules: { tierId: [isRequired], mealCount: [isRequired], mealPreference: [isRequired], foodPreference: [isRequired] },
       messages: {
         tierId: "Please choose a plan.",
         mealCount: "Please choose 1 or 2 meals a day.",
         mealPreference: "Please choose lunch, dinner, or both.",
         foodPreference: "Please choose vegetarian or non-vegetarian.",
+      },
+    },
+    1: {
+      rules: { fullName: [isRequired, maxLength(MAX_LENGTHS.name)], phone: [isRequired, isValidPhone], email: [isRequired, isValidEmail] },
+      messages: {
+        fullName: "Please enter your full name.",
+        phone: "Enter a valid 10-digit phone number.",
+        email: "Enter a valid email address.",
       },
     },
     2: {
@@ -291,24 +291,6 @@ function SubscribeForm() {
         />
 
         {step === 0 && (
-          <fieldset className="space-y-5">
-            <CardHeader icon={User} title="Your Details" />
-            <p className="-mt-3 text-sm text-ink/60">Let&apos;s start with how our team can reach you.</p>
-            <Field label="Full Name" error={errors.fullName}>
-              <IconInput icon={User} value={values.fullName} onChange={(v) => update("fullName", v)} placeholder="Enter your full name" />
-            </Field>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field label="Phone Number" error={errors.phone}>
-                <IconInput icon={PhoneIcon} value={values.phone} onChange={(v) => update("phone", v)} placeholder="Enter your phone number" inputMode="tel" />
-              </Field>
-              <Field label="Email Address" error={errors.email}>
-                <IconInput icon={Mail} type="email" value={values.email} onChange={(v) => update("email", v)} placeholder="Enter your email" />
-              </Field>
-            </div>
-          </fieldset>
-        )}
-
-        {step === 1 && (
           <fieldset className="space-y-6">
             <CardHeader icon={Settings2} title="Plan & Preferences" />
             <p className="-mt-3 text-sm text-ink/60">Pick a plan, then tell us what and how often you&apos;d like to eat.</p>
@@ -357,6 +339,24 @@ function SubscribeForm() {
                 </p>
               </div>
             )}
+          </fieldset>
+        )}
+
+        {step === 1 && (
+          <fieldset className="space-y-5">
+            <CardHeader icon={User} title="Your Details" />
+            <p className="-mt-3 text-sm text-ink/60">Let&apos;s start with how our team can reach you.</p>
+            <Field label="Full Name" error={errors.fullName}>
+              <IconInput icon={User} value={values.fullName} onChange={(v) => update("fullName", v)} placeholder="Enter your full name" />
+            </Field>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field label="Phone Number" error={errors.phone}>
+                <IconInput icon={PhoneIcon} value={values.phone} onChange={(v) => update("phone", v)} placeholder="Enter your phone number" inputMode="tel" />
+              </Field>
+              <Field label="Email Address" error={errors.email}>
+                <IconInput icon={Mail} type="email" value={values.email} onChange={(v) => update("email", v)} placeholder="Enter your email" />
+              </Field>
+            </div>
           </fieldset>
         )}
 
@@ -455,18 +455,18 @@ function SubscribeForm() {
             <p className="-mt-3 text-sm text-ink/60">Take a moment to check everything looks right.</p>
 
             <div className="space-y-4 rounded-xl2 border border-sand bg-palegreen/30 p-6">
-              <ReviewGroup title="Your Details" onEdit={() => goToStep(0)}>
-                <ReviewRow label="Name" value={values.fullName} />
-                <ReviewRow label="Phone" value={values.phone} />
-                <ReviewRow label="Email" value={values.email} />
-              </ReviewGroup>
-
-              <ReviewGroup title="Plan & Preferences" onEdit={() => goToStep(1)}>
+              <ReviewGroup title="Plan & Preferences" onEdit={() => goToStep(0)}>
                 <ReviewRow label="Plan" value={selectedTier?.name || "-"} />
                 <ReviewRow label="Meals per Day" value={values.mealCount ? `${values.mealCount} meal(s)` : "-"} />
                 <ReviewRow label="Meal Time" value={values.mealPreference || "-"} />
                 <ReviewRow label="Food Type" value={values.foodPreference || "-"} />
                 {selectedPlanOption && <ReviewRow label="Plan Total" value={formatINR(selectedPlanOption.totalPrice)} />}
+              </ReviewGroup>
+
+              <ReviewGroup title="Your Details" onEdit={() => goToStep(1)}>
+                <ReviewRow label="Name" value={values.fullName} />
+                <ReviewRow label="Phone" value={values.phone} />
+                <ReviewRow label="Email" value={values.email} />
               </ReviewGroup>
 
               <ReviewGroup title="Meals & Add-ons" onEdit={() => goToStep(2)}>

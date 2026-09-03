@@ -1,10 +1,10 @@
+import Link from "next/link";
 import Image from "next/image";
 import { LinkButton } from "@/components/Button";
-import PlanCard from "@/components/PlanCard";
 import Reveal from "@/components/Reveal";
 import StickyMobileCta from "@/components/StickyMobileCta";
 import DeliveryScooter from "@/components/icons/DeliveryScooter";
-import { business, subscriptionTiers } from "@/lib/config";
+import { business } from "@/lib/config";
 import {
   Leaf,
   ChefHat,
@@ -18,6 +18,8 @@ import {
   CalendarDays,
   CookingPot,
   Phone,
+  ShoppingCart,
+  ArrowRight,
 } from "lucide-react";
 
 const benefits = [
@@ -39,6 +41,30 @@ const whyChoose = [
   { icon: Salad, title: "Balanced Nutrition", body: "Well-balanced meals for a healthy, active lifestyle." },
   { icon: MapPin, title: "Local & Reliable", body: `Proudly serving ${business.serviceAreas.slice(0, 2).join(" & ")} with care.` },
   { icon: Users, title: "Customer First", body: "Your satisfaction is our top priority." },
+];
+
+const lifestyleMealPlans = [
+  {
+    title: "Subscription Plans",
+    description:
+      "Scheduled, chef-prepared meals delivered fresh daily to your doorstep. Flexible vegetarian and non-vegetarian plans tailored to your routine.",
+    href: "/plans",
+    icon: CalendarDays,
+  },
+  {
+    title: "Individual Meal",
+    description:
+      "Fresh, wholesome single meals on your schedule with zero subscription commitments. Perfectly portioned, delicious home-style food on demand.",
+    href: "/menu/request",
+    icon: ShoppingBag,
+  },
+  {
+    title: "Party & Bulk",
+    description:
+      "Generous, flavorful catering trays for office gatherings, family celebrations, and events. Freshly prepared in bulk and delivered hot on time.",
+    href: "/party-request",
+    icon: Users,
+  },
 ];
 
 export default function HomePage() {
@@ -139,19 +165,31 @@ export default function HomePage() {
           <p className="mx-auto mt-2 max-w-md text-sm text-ink-secondary">Choose the perfect plan that fits your needs and schedule.</p>
         </Reveal>
 
-        <div className="mt-10 grid auto-rows-fr items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {subscriptionTiers.map((tier, i) => (
-            <Reveal key={tier.id} delay={i * 90} className="h-full">
-              <PlanCard tier={tier} popular={tier.id === "weekly"} />
+        <div className="mt-10 grid auto-rows-fr items-stretch gap-6 md:grid-cols-3 lg:gap-8">
+          {lifestyleMealPlans.map((plan, i) => (
+            <Reveal key={plan.title} delay={i * 90} className="h-full">
+              <div className="relative flex h-full flex-col overflow-hidden rounded-xl2 border border-sand bg-white p-6 shadow-soft transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-forest/40 hover:shadow-[0_20px_45px_-18px_rgba(8,122,53,0.28)]">
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-palegreen text-forest">
+                  <plan.icon size={22} strokeWidth={1.8} />
+                </span>
+
+                <h3 className="mt-4 font-display text-xl font-bold text-ink">{plan.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink-secondary">{plan.description}</p>
+
+                <div className="mt-auto pt-6">
+                  <Link
+                    href={plan.href}
+                    className="group/btn inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-forest px-6 py-3 text-sm font-semibold tracking-wide text-forest transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-palegreen"
+                  >
+                    <ShoppingCart size={15} className="shrink-0" aria-hidden="true" />
+                    <span>View Plan</span>
+                    <ArrowRight size={15} className="ml-auto shrink-0 transition-transform duration-200 ease-out group-hover/btn:translate-x-1" />
+                  </Link>
+                </div>
+              </div>
             </Reveal>
           ))}
         </div>
-
-        <Reveal delay={200} className="mt-10 text-center">
-          <LinkButton href="/plans" withArrow>
-            View All Plans
-          </LinkButton>
-        </Reveal>
       </section>
 
       {/* HOW IT WORKS */}
