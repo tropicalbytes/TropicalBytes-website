@@ -245,8 +245,24 @@ function isOneOf(v, allowedList) {
   return allowedList.indexOf(v) !== -1;
 }
 
-/** Validates an array of ids against an allowlist map (id -> label), with a size cap. Returns {ok, labels} or {ok:false}. */
-function validateIdArray(v, allowlistMap, maxItems) {
+function isValidItemQuantitiesObject(obj) {
+  if (obj === undefined || obj === null) return true;
+  if (typeof obj !== "object" || isArray(obj)) return false;
+  const keys = Object.keys(obj);
+  if (keys.length > MAX_SELECTED_ITEMS * 2) return false;
+  for (let i = 0; i < keys.length; i++) {
+    const k = keys[i];
+    const isKnown = Object.prototype.hasOwnProperty.call(GENERATED_ALLOWLIST.MEAL_IDS, k) ||
+                    Object.prototype.hasOwnProperty.call(GENERATED_ALLOWLIST.ADDON_IDS, k);
+    if (!isKnown) return false;
+    const q = obj[k];
+    if (!isValidQuantity(q)) return false;
+  }
+  return true;
+}
+
+/** Validates an array of ids against an allowlist map (id -> label), with a size cap and optional quantity mapping. Returns {ok, labels} or {ok:false}. */
+function validateIdArray(v, allowlistMap, maxItems, quantitiesMap) {
   if (v === undefined || v === null) return { ok: true, labels: [] };
   if (!isArray(v)) return { ok: false };
   if (v.length > maxItems) return { ok: false };
@@ -256,7 +272,14 @@ function validateIdArray(v, allowlistMap, maxItems) {
     if (!isString(id) || !Object.prototype.hasOwnProperty.call(allowlistMap, id)) {
       return { ok: false };
     }
-    labels.push(allowlistMap[id]);
+    let label = allowlistMap[id];
+    if (quantitiesMap && typeof quantitiesMap === "object" && Object.prototype.hasOwnProperty.call(quantitiesMap, id)) {
+      const q = Number(quantitiesMap[id]);
+      if (Number.isFinite(q) && Number.isInteger(q) && q >= 1 && q <= MAX_QUANTITY) {
+        label += " \u00D7 " + q;
+      }
+    }
+    labels.push(label);
   }
   return { ok: true, labels: labels };
 }
@@ -355,10 +378,12 @@ function validateAndNormalize(requestType, raw) {
     check(isValidBusinessDate(date), "preferredDate");
     check(isNonEmptyString(raw.deliveryLocation) && withinLength(raw.deliveryLocation, MAX_LENGTHS.location), "deliveryLocation");
     check(raw.notes === undefined || withinLength(String(raw.notes || ""), MAX_LENGTHS.notes), "notes");
+    check(isValidItemQuantitiesObject(raw.itemQuantities), "itemQuantities");
 
-    const meals = validateIdArray(raw.selectedMealIds, GENERATED_ALLOWLIST.MEAL_IDS, MAX_SELECTED_ITEMS);
+    const itemQuantities = (raw.itemQuantities && typeof raw.itemQuantities === "object") ? raw.itemQuantities : null;
+    const meals = validateIdArray(raw.selectedMealIds, GENERATED_ALLOWLIST.MEAL_IDS, MAX_SELECTED_ITEMS, itemQuantities);
     check(meals.ok, "selectedMealIds");
-    const addOns = validateIdArray(raw.selectedAddOnIds, GENERATED_ALLOWLIST.ADDON_IDS, MAX_SELECTED_ITEMS);
+    const addOns = validateIdArray(raw.selectedAddOnIds, GENERATED_ALLOWLIST.ADDON_IDS, MAX_SELECTED_ITEMS, itemQuantities);
     check(addOns.ok, "selectedAddOnIds");
 
     if (errors.length > 0) return { ok: false, errors: errors };
@@ -373,6 +398,7 @@ function validateAndNormalize(requestType, raw) {
         preferredDate: date,
         deliveryLocation: raw.deliveryLocation.trim(),
         addOns: addOns.labels.join(", "),
+        clientEstimatedTotal: sanitizeForDisplay(raw.clientEstimatedTotal),
         notes: raw.notes ? String(raw.notes).trim() : "",
       }),
     };

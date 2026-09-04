@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import PageHero from "@/components/PageHero";
 import MultiSelectCombobox from "@/components/MultiSelectCombobox";
-import { business, FoodType, buildMealOptionGroups, buildAddOnOptionGroups } from "@/lib/config";
+import { business, FoodType, buildMealOptionGroups, buildAddOnOptionGroups, formatINR, getIndividualItemPrice, getIndividualItemLabel } from "@/lib/config";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
 import { isRequired, isValidEmail, isValidPhone, isFutureOrTodayDate, isWithinFutureWindow, maxLength, isValidQuantity, validate } from "@/lib/validation";
 import { REQUEST_TYPES, MAX_FUTURE_DATE_DAYS, MAX_LENGTHS, MEAL_PREFERENCE_OPTIONS } from "@/lib/constants";
@@ -27,6 +27,7 @@ import {
   Calendar,
   MessageSquare,
   Hash,
+  Receipt,
   LucideIcon,
 } from "lucide-react";
 
@@ -57,6 +58,7 @@ const addOnGroups = buildAddOnOptionGroups();
 
 function RequestForm() {
   const [category, setCategory] = useState<Category>("veg");
+  const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
   const [values, setValues] = useState<FormState>({
     fullName: "",
     phone: "",
@@ -75,29 +77,113 @@ function RequestForm() {
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Keep foodPreference in sync with the Veg / Non-Veg category tab. The
-  // Desserts tab doesn't change foodPreference (desserts apply either way).
+  // Keep foodPreference in sync with category tabs.
   useEffect(() => {
     if (category === "veg") setValues((v) => ({ ...v, foodPreference: "Veg" }));
     if (category === "nonveg") setValues((v) => ({ ...v, foodPreference: "Non-Veg" }));
   }, [category]);
 
   const mealGroups = useMemo(() => {
-    if (!values.foodPreference) return [];
-    return buildMealOptionGroups(values.foodPreference as FoodType);
-  }, [values.foodPreference]);
-
-  useEffect(() => {
-    const validIds = new Set(mealGroups.flatMap((g) => g.options.map((o) => o.id)));
-    setValues((v) => {
-      const filtered = v.selectedMeals.filter((id) => validIds.has(id));
-      if (filtered.length === v.selectedMeals.length) return v;
-      return { ...v, selectedMeals: filtered };
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values.foodPreference]);
+    if (category === "desserts") return [];
+    return buildMealOptionGroups(category === "nonveg" ? "Non-Veg" : "Veg");
+  }, [category]);
 
   const update = (field: keyof FormState, value: string) => setValues((v) => ({ ...v, [field]: value }));
+
+  const handleIncrease = (id: string) => {
+    setItemQuantities((prev) => {
+      const current = prev[id] || 1;
+      return { ...prev, [id]: current + 1 };
+    });
+  };
+
+  const handleDecrease = (id: string) => {
+    const current = itemQuantities[id] || 1;
+    if (current <= 1) {
+      setItemQuantities((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      setValues((v) => ({
+        ...v,
+        selectedMeals: v.selectedMeals.filter((s) => s !== id),
+        selectedAddOns: v.selectedAddOns.filter((s) => s !== id),
+      }));
+    } else {
+      setItemQuantities((prev) => ({
+        ...prev,
+        [id]: current - 1,
+      }));
+    }
+  };
+
+  const handleMealsChange = (ids: string[]) => {
+    const prevMeals = values.selectedMeals;
+    const added = ids.filter((id) => !prevMeals.includes(id));
+    const removed = prevMeals.filter((id) => !ids.includes(id));
+
+    setItemQuantities((prev) => {
+      const next = { ...prev };
+      added.forEach((id) => {
+        if (!next[id]) next[id] = 1;
+      });
+      removed.forEach((id) => {
+        delete next[id];
+      });
+      return next;
+    });
+
+    setValues((v) => ({ ...v, selectedMeals: ids }));
+  };
+
+  const handleAddOnsChange = (ids: string[]) => {
+    const prevAddOns = values.selectedAddOns;
+    const added = ids.filter((id) => !prevAddOns.includes(id));
+    const removed = prevAddOns.filter((id) => !ids.includes(id));
+
+    setItemQuantities((prev) => {
+      const next = { ...prev };
+      added.forEach((id) => {
+        if (!next[id]) next[id] = 1;
+      });
+      removed.forEach((id) => {
+        delete next[id];
+      });
+      return next;
+    });
+
+    setValues((v) => ({ ...v, selectedAddOns: ids }));
+  };
+
+  // Derived live total price
+  const totalPrice = useMemo(() => {
+    return Object.entries(itemQuantities).reduce((sum, [id, qty]) => {
+      return sum + getIndividualItemPrice(id) * qty;
+    }, 0);
+  }, [itemQuantities]);
+
+  // Derived total item count
+  const totalItemCount = useMemo(() => {
+    return Object.values(itemQuantities).reduce((sum, qty) => sum + qty, 0);
+  }, [itemQuantities]);
+
+  // Derived itemized summary for the Total Card
+  const selectedItemsSummary = useMemo(() => {
+    const allSelectedIds = [
+      ...values.selectedMeals,
+      ...values.selectedAddOns.filter((id) => !values.selectedMeals.includes(id)),
+    ];
+    return allSelectedIds
+      .map((id) => {
+        const qty = itemQuantities[id] || 0;
+        if (qty <= 0) return null;
+        const price = getIndividualItemPrice(id);
+        const label = getIndividualItemLabel(id);
+        return { id, label, price, quantity: qty, subtotal: price * qty };
+      })
+      .filter(Boolean) as { id: string; label: string; price: number; quantity: number; subtotal: number }[];
+  }, [values.selectedMeals, values.selectedAddOns, itemQuantities]);
 
   const runValidation = () =>
     validate(
@@ -145,6 +231,9 @@ function RequestForm() {
     setStatus("submitting");
     setErrorMessage("");
 
+    const hasNonVegMeal = values.selectedMeals.some((id) => id.startsWith("non-veg-"));
+    const effectiveFoodPreference = hasNonVegMeal ? "Non-Veg" : (values.foodPreference || "Veg");
+
     const result = await submitToGoogleSheets({
       requestType: REQUEST_TYPES.INDIVIDUAL_MEAL,
       clientRequestId: newClientRequestId("MEAL"),
@@ -153,12 +242,14 @@ function RequestForm() {
       phone: values.phone,
       email: values.email,
       mealTime: values.mealTime,
-      foodPreference: values.foodPreference,
+      foodPreference: effectiveFoodPreference,
       selectedMealIds: values.selectedMeals,
       quantity: values.quantity,
       preferredDate: values.date,
       deliveryLocation: values.location,
       selectedAddOnIds: values.selectedAddOns,
+      itemQuantities: itemQuantities,
+      clientEstimatedTotal: formatINR(totalPrice),
       notes: values.notes,
     });
 
@@ -204,55 +295,104 @@ function RequestForm() {
           autoComplete="off"
         />
 
-        <div className="grid gap-6 md:grid-cols-2 md:gap-8">
-          {/* LEFT — meal / dessert selection */}
-          <div className={FORM_CARD_CLASS}>
-            <CardHeader
-              icon={CategoryIcon}
-              title={category === "desserts" ? "Choose Your Desserts" : `Choose Your ${category === "veg" ? "Veg" : "Non-Veg"} Meals`}
-            />
+        <div className="grid gap-6 md:grid-cols-2 md:gap-8 items-start">
+          {/* LEFT — meal / dessert selection + Dedicated Total Price Card */}
+          <div className="space-y-6">
+            <div className={FORM_CARD_CLASS}>
+              <CardHeader
+                icon={CategoryIcon}
+                title={category === "desserts" ? "Choose Your Desserts" : `Choose Your ${category === "veg" ? "Veg" : "Non-Veg"} Meals`}
+              />
 
-            <div className="space-y-6">
-              {category !== "desserts" ? (
-                mealGroups.length > 0 && (
+              <div className="space-y-6">
+                {category !== "desserts" ? (
+                  mealGroups.length > 0 && (
+                    <MultiSelectCombobox
+                      label="Menu Selection"
+                      placeholder="Search menu..."
+                      groups={mealGroups}
+                      selected={values.selectedMeals}
+                      onChange={handleMealsChange}
+                      showQuantities={true}
+                      quantities={itemQuantities}
+                      onIncrease={handleIncrease}
+                      onDecrease={handleDecrease}
+                      helperText={`Showing ${category === "veg" ? "Veg" : "Non-Veg"} Meals. Select one or more dishes.`}
+                    />
+                  )
+                ) : (
                   <MultiSelectCombobox
-                    label="Menu Selection"
-                    placeholder="Search menu..."
-                    groups={mealGroups}
-                    selected={values.selectedMeals}
-                    onChange={(ids) => setValues((v) => ({ ...v, selectedMeals: ids }))}
-                    helperText={`Showing ${category === "veg" ? "Veg" : "Non-Veg"} Meals. Select one or more dishes.`}
+                    label="Dessert Selection"
+                    placeholder="Search desserts..."
+                    groups={addOnGroups}
+                    selected={values.selectedAddOns}
+                    onChange={handleAddOnsChange}
+                    showQuantities={true}
+                    quantities={itemQuantities}
+                    onIncrease={handleIncrease}
+                    onDecrease={handleDecrease}
+                    helperText="Desserts can be added to any order, Veg or Non-Veg."
                   />
-                )
-              ) : (
-                <MultiSelectCombobox
-                  label="Dessert Selection"
-                  placeholder="Search desserts..."
-                  groups={addOnGroups}
-                  selected={values.selectedAddOns}
-                  onChange={(ids) => setValues((v) => ({ ...v, selectedAddOns: ids }))}
-                  helperText="Desserts can be added to any order, Veg or Non-Veg."
-                />
-              )}
+                )}
 
-              {category !== "desserts" && (
-                <MultiSelectCombobox
-                  label="Add Desserts (optional)"
-                  placeholder="Search desserts..."
-                  groups={addOnGroups}
-                  selected={values.selectedAddOns}
-                  onChange={(ids) => setValues((v) => ({ ...v, selectedAddOns: ids }))}
-                />
-              )}
+                {category !== "desserts" && (
+                  <MultiSelectCombobox
+                    label="Add Desserts (optional)"
+                    placeholder="Search desserts..."
+                    groups={addOnGroups}
+                    selected={values.selectedAddOns}
+                    onChange={handleAddOnsChange}
+                    showQuantities={true}
+                    quantities={itemQuantities}
+                    onIncrease={handleIncrease}
+                    onDecrease={handleDecrease}
+                  />
+                )}
 
-              <div className="border-t border-sand pt-6">
-                <Field label="Meal Type" error={errors.mealTime}>
-                  <div className="flex flex-wrap gap-3">
-                    {MEAL_PREFERENCE_OPTIONS.map((m) => (
-                      <SelectPill key={m} label={m} selected={values.mealTime === m} onSelect={() => update("mealTime", m)} />
+                <div className="border-t border-sand pt-6">
+                  <Field label="Meal Type" error={errors.mealTime}>
+                    <div className="flex flex-wrap gap-3">
+                      {MEAL_PREFERENCE_OPTIONS.map((m) => (
+                        <SelectPill key={m} label={m} selected={values.mealTime === m} onSelect={() => update("mealTime", m)} />
+                      ))}
+                    </div>
+                  </Field>
+                </div>
+              </div>
+            </div>
+
+            {/* Dedicated Total Price Card */}
+            <div className={FORM_CARD_CLASS}>
+              <CardHeader icon={Receipt} title="What's Your Total?" />
+
+              <div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-display text-3xl font-extrabold text-forest sm:text-4xl tracking-tight">
+                    {formatINR(totalPrice)}
+                  </span>
+                  {totalItemCount > 0 && (
+                    <span className="rounded-full bg-palegreen px-3 py-1 text-xs font-bold text-forest">
+                      {totalItemCount} {totalItemCount === 1 ? "item" : "items"}
+                    </span>
+                  )}
+                </div>
+
+                {selectedItemsSummary.length === 0 ? (
+                  <p className="mt-2 text-xs text-ink/50">
+                    Choose your meals and desserts above to calculate your total.
+                  </p>
+                ) : (
+                  <div className="mt-4 border-t border-sand pt-3 space-y-2">
+                    {selectedItemsSummary.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between text-xs text-ink/85">
+                        <span className="truncate pr-2">
+                          {item.label} <span className="font-semibold text-forest">× {item.quantity}</span>
+                        </span>
+                        <span className="shrink-0 font-medium text-copper">{formatINR(item.subtotal)}</span>
+                      </div>
                     ))}
                   </div>
-                </Field>
+                )}
               </div>
             </div>
           </div>

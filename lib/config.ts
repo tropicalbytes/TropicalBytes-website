@@ -270,6 +270,7 @@ export interface MenuOption {
   id: string;
   label: string;
   meta?: string;
+  price?: number;
 }
 
 export interface MenuOptionGroup {
@@ -287,6 +288,7 @@ export function buildMealOptionGroups(foodType: FoodType): MenuOptionGroup[] {
         id: slugify(`${foodType}-${item.name}`),
         label: item.name,
         meta: formatINR(item.price),
+        price: item.price,
       })),
     },
   ];
@@ -301,9 +303,38 @@ export function buildAddOnOptionGroups(): MenuOptionGroup[] {
         id: slugify(`dessert-${item.name}`),
         label: item.name,
         meta: formatINR(item.price),
+        price: item.price,
       })),
     },
   ];
+}
+
+/** Look up individual meal or dessert price by item ID. Source of truth is individualMenu. */
+export function getIndividualItemPrice(id: string): number {
+  for (const item of individualMenu.veg) {
+    if (slugify(`Veg-${item.name}`) === id) return item.price;
+  }
+  for (const item of individualMenu.nonVeg) {
+    if (slugify(`Non-Veg-${item.name}`) === id) return item.price;
+  }
+  for (const item of individualMenu.desserts) {
+    if (slugify(`dessert-${item.name}`) === id) return item.price;
+  }
+  return 0;
+}
+
+/** Look up individual meal or dessert label by item ID. */
+export function getIndividualItemLabel(id: string): string {
+  for (const item of individualMenu.veg) {
+    if (slugify(`Veg-${item.name}`) === id) return item.name;
+  }
+  for (const item of individualMenu.nonVeg) {
+    if (slugify(`Non-Veg-${item.name}`) === id) return item.name;
+  }
+  for (const item of individualMenu.desserts) {
+    if (slugify(`dessert-${item.name}`) === id) return item.name;
+  }
+  return id;
 }
 
 /** Grouped, searchable options for the Party/Bulk order form. */
