@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import Reveal from "@/components/Reveal";
 import MultiSelectCombobox from "@/components/MultiSelectCombobox";
-import { business, partyBulkOrders, buildPartyOptionGroups } from "@/lib/config";
+import { business, partyBulkOrders, buildPartyOptionGroups, getPartyItemPrice, getPartyItemDetails, formatINR } from "@/lib/config";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
 import { isRequired, isValidEmail, isValidPhone, isFutureOrTodayDate, isWithinFutureWindow, isEmptyOrPositiveNumber, maxLength, validate } from "@/lib/validation";
 import { REQUEST_TYPES, MAX_FUTURE_DATE_DAYS, MAX_LENGTHS } from "@/lib/constants";
@@ -12,7 +12,7 @@ import SuccessScreen from "@/components/SuccessScreen";
 import ErrorMessage from "@/components/ErrorMessage";
 import { Button } from "@/components/Button";
 import { CardHeader, IconInput, IconTextarea, Field } from "@/components/FormKit";
-import { Users, Clock, Package, Leaf, FileText, User, Phone as PhoneIcon, Mail, Hash, Calendar, MapPin, MessageSquare } from "lucide-react";
+import { Users, Clock, Package, Leaf, FileText, User, Phone as PhoneIcon, Mail, Hash, Calendar, MapPin, MessageSquare, Receipt } from "lucide-react";
 
 const partyGroups = buildPartyOptionGroups();
 
@@ -28,11 +28,82 @@ export default function PartyRequestPage() {
     honeypot: "",
   });
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
   const update = (field: keyof typeof values, value: string) => setValues((v) => ({ ...v, [field]: value }));
+
+  const handleIncrease = (id: string) => {
+    setItemQuantities((prev) => {
+      const current = prev[id] || 1;
+      return { ...prev, [id]: current + 1 };
+    });
+  };
+
+  const handleDecrease = (id: string) => {
+    const current = itemQuantities[id] || 1;
+    if (current <= 1) {
+      setItemQuantities((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      setSelectedItems((prev) => prev.filter((s) => s !== id));
+    } else {
+      setItemQuantities((prev) => ({
+        ...prev,
+        [id]: current - 1,
+      }));
+    }
+  };
+
+  const handleSelectedItemsChange = (ids: string[]) => {
+    const prevItems = selectedItems;
+    const added = ids.filter((id) => !prevItems.includes(id));
+    const removed = prevItems.filter((id) => !ids.includes(id));
+
+    setItemQuantities((prev) => {
+      const next = { ...prev };
+      added.forEach((id) => {
+        if (!next[id]) next[id] = 1;
+      });
+      removed.forEach((id) => {
+        delete next[id];
+      });
+      return next;
+    });
+
+    setSelectedItems(ids);
+  };
+
+  // Derived live total price
+  const totalPrice = useMemo(() => {
+    return Object.entries(itemQuantities).reduce((sum, [id, qty]) => {
+      return sum + getPartyItemPrice(id) * qty;
+    }, 0);
+  }, [itemQuantities]);
+
+  // Derived total item count
+  const totalItemCount = useMemo(() => {
+    return Object.values(itemQuantities).reduce((sum, qty) => sum + qty, 0);
+  }, [itemQuantities]);
+
+  // Derived itemized summary for the Total Card
+  const selectedItemsSummary = useMemo(() => {
+    return selectedItems
+      .map((id) => {
+        const qty = itemQuantities[id] || 0;
+        if (qty <= 0) return null;
+        const details = getPartyItemDetails(id);
+        const label = details ? details.label : id;
+        const price = details ? details.price : 0;
+        const subtotal = typeof price === "number" ? price * qty : 0;
+        return { id, label, price, quantity: qty, subtotal };
+      })
+      .filter(Boolean) as { id: string; label: string; price: number | "Seasonal"; quantity: number; subtotal: number }[];
+  }, [selectedItems, itemQuantities]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +147,8 @@ export default function PartyRequestPage() {
       // IDs, not label text — the backend looks these up in its own
       // allowlist and never trusts free-text labels from the browser.
       selectedItemIds: selectedItems,
+      itemQuantities: itemQuantities,
+      clientEstimatedTotal: totalPrice > 0 ? formatINR(totalPrice) : undefined,
       approxQuantityKg: values.approxKg,
       eventDate: values.eventDate,
       deliveryLocation: values.location,
@@ -224,10 +297,51 @@ export default function PartyRequestPage() {
                 placeholder="Search bulk menu..."
                 groups={partyGroups}
                 selected={selectedItems}
-                onChange={setSelectedItems}
+                onChange={handleSelectedItemsChange}
                 helperText={partyBulkOrders.minimumOrderLabel}
+                showQuantities={true}
+                quantities={itemQuantities}
+                onIncrease={handleIncrease}
+                onDecrease={handleDecrease}
               />
               {errors.selectedItems && <span className="mt-1.5 block text-xs font-medium text-danger">{errors.selectedItems}</span>}
+            </div>
+
+            {/* Dedicated Total Price Card */}
+            <div className="rounded-xl2 border border-forest/10 bg-palegreen/20 p-5 sm:p-6">
+              <CardHeader icon={Receipt} title="What's Your Total?" />
+
+              <div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-display text-3xl font-extrabold text-forest sm:text-4xl tracking-tight">
+                    {formatINR(totalPrice)}
+                  </span>
+                  {totalItemCount > 0 && (
+                    <span className="rounded-full bg-palegreen px-3 py-1 text-xs font-bold text-forest">
+                      {totalItemCount} {totalItemCount === 1 ? "item" : "items"}
+                    </span>
+                  )}
+                </div>
+
+                {selectedItemsSummary.length === 0 ? (
+                  <p className="mt-2 text-xs text-ink/50">
+                    Select your party and bulk items above to calculate your total.
+                  </p>
+                ) : (
+                  <div className="mt-4 border-t border-sand pt-3 space-y-2">
+                    {selectedItemsSummary.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between text-xs text-ink/85">
+                        <span className="truncate pr-2">
+                          {item.label} <span className="font-semibold text-forest">× {item.quantity}</span>
+                        </span>
+                        <span className="shrink-0 font-medium text-copper">
+                          {item.price === "Seasonal" ? "Seasonal" : formatINR(item.subtotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2">

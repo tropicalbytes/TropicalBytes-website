@@ -367,6 +367,51 @@ export function buildPartyOptionGroups(): MenuOptionGroup[] {
   ];
 }
 
+/** Look up party or bulk item price by item ID. Numerical calculation treats Seasonal as 0. */
+export function getPartyItemPrice(id: string): number {
+  for (const item of partyBulkOrders.veg) {
+    if (slugify(`party-veg-${item.name}`) === id) {
+      return typeof item.price === "number" ? item.price : 0;
+    }
+  }
+  for (const item of partyBulkOrders.nonVeg) {
+    if (slugify(`party-nonveg-${item.name}`) === id) {
+      return typeof item.price === "number" ? item.price : 0;
+    }
+  }
+  for (const item of partyBulkOrders.desserts) {
+    if (slugify(`party-dessert-${item.name}`) === id) {
+      return typeof item.price === "number" ? item.price : 0;
+    }
+  }
+  return 0;
+}
+
+/** Look up party or bulk item details (label, price, unit) by item ID. */
+export function getPartyItemDetails(id: string): { label: string; price: number | "Seasonal"; unit: "kg" | "piece" } | undefined {
+  for (const item of partyBulkOrders.veg) {
+    if (slugify(`party-veg-${item.name}`) === id) {
+      return { label: item.name, price: item.price, unit: item.unit };
+    }
+  }
+  for (const item of partyBulkOrders.nonVeg) {
+    if (slugify(`party-nonveg-${item.name}`) === id) {
+      return { label: item.name, price: item.price, unit: item.unit };
+    }
+  }
+  for (const item of partyBulkOrders.desserts) {
+    if (slugify(`party-dessert-${item.name}`) === id) {
+      return { label: item.name, price: item.price, unit: item.unit };
+    }
+  }
+  return undefined;
+}
+
+/** Look up party or bulk item label by item ID. */
+export function getPartyItemLabel(id: string): string {
+  return getPartyItemDetails(id)?.label || id;
+}
+
 // ----------------------------------------------------------------------------
 // SITE CONTENT
 // ----------------------------------------------------------------------------

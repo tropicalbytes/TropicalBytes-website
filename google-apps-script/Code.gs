@@ -253,7 +253,8 @@ function isValidItemQuantitiesObject(obj) {
   for (let i = 0; i < keys.length; i++) {
     const k = keys[i];
     const isKnown = Object.prototype.hasOwnProperty.call(GENERATED_ALLOWLIST.MEAL_IDS, k) ||
-                    Object.prototype.hasOwnProperty.call(GENERATED_ALLOWLIST.ADDON_IDS, k);
+                    Object.prototype.hasOwnProperty.call(GENERATED_ALLOWLIST.ADDON_IDS, k) ||
+                    Object.prototype.hasOwnProperty.call(GENERATED_ALLOWLIST.PARTY_ITEM_IDS, k);
     if (!isKnown) return false;
     const q = obj[k];
     if (!isValidQuantity(q)) return false;
@@ -373,7 +374,8 @@ function validateAndNormalize(requestType, raw) {
     const date = raw.preferredDate;
 
     check(isOneOf(mealTime, GENERATED_ALLOWLIST.MEAL_PREFERENCES), "mealTime");
-    check(isOneOf(foodPreference, GENERATED_ALLOWLIST.FOOD_PREFERENCES), "foodPreference");
+    const allowedFoodPrefs = ["Veg", "Non-Veg", "Veg & Non-Veg", "Desserts"];
+    check(isOneOf(foodPreference, allowedFoodPrefs), "foodPreference");
     check(isValidQuantity(quantity), "quantity");
     check(isValidBusinessDate(date), "preferredDate");
     check(isNonEmptyString(raw.deliveryLocation) && withinLength(raw.deliveryLocation, MAX_LENGTHS.location), "deliveryLocation");
@@ -388,16 +390,58 @@ function validateAndNormalize(requestType, raw) {
 
     if (errors.length > 0) return { ok: false, errors: errors };
 
+    // Authoritative classification based on actual selected items
+    let hasVeg = false;
+    let hasNonVeg = false;
+    if (isArray(raw.selectedMealIds)) {
+      for (let i = 0; i < raw.selectedMealIds.length; i++) {
+        const id = String(raw.selectedMealIds[i] || "").toLowerCase();
+        if (id.indexOf("veg-") === 0) hasVeg = true;
+        if (id.indexOf("non-veg-") === 0) hasNonVeg = true;
+      }
+    }
+    const hasDesserts = isArray(raw.selectedAddOnIds) && raw.selectedAddOnIds.length > 0;
+
+    let computedFoodPreference;
+    let finalSelectedMeals;
+    let finalAddOns;
+
+    if (hasVeg && hasNonVeg) {
+      // Case A: Veg + Non-Veg
+      computedFoodPreference = "Veg & Non-Veg";
+      finalSelectedMeals = meals.labels.join(", ");
+      finalAddOns = addOns.labels.join(", ");
+    } else if (hasVeg) {
+      // Case B: Veg only
+      computedFoodPreference = "Veg";
+      finalSelectedMeals = meals.labels.join(", ");
+      finalAddOns = addOns.labels.join(", ");
+    } else if (hasNonVeg) {
+      // Case C: Non-Veg only
+      computedFoodPreference = "Non-Veg";
+      finalSelectedMeals = meals.labels.join(", ");
+      finalAddOns = addOns.labels.join(", ");
+    } else if (hasDesserts) {
+      // Case D: Desserts only -> Desserts placed under Selected Meals, Add-ons is blank
+      computedFoodPreference = "Desserts";
+      finalSelectedMeals = addOns.labels.join(", ");
+      finalAddOns = "";
+    } else {
+      computedFoodPreference = isNonEmptyString(foodPreference) ? foodPreference : "Veg";
+      finalSelectedMeals = meals.labels.join(", ");
+      finalAddOns = addOns.labels.join(", ");
+    }
+
     return {
       ok: true,
       data: Object.assign({}, base, {
         mealTime: mealTime,
-        foodPreference: foodPreference,
-        selectedMeals: meals.labels.join(", "),
+        foodPreference: computedFoodPreference,
+        selectedMeals: finalSelectedMeals,
         quantity: Math.trunc(Number(quantity)),
         preferredDate: date,
         deliveryLocation: raw.deliveryLocation.trim(),
-        addOns: addOns.labels.join(", "),
+        addOns: finalAddOns,
         clientEstimatedTotal: sanitizeForDisplay(raw.clientEstimatedTotal),
         notes: raw.notes ? String(raw.notes).trim() : "",
       }),
@@ -411,8 +455,10 @@ function validateAndNormalize(requestType, raw) {
     check(isNonEmptyString(raw.deliveryLocation) && withinLength(raw.deliveryLocation, MAX_LENGTHS.location), "deliveryLocation");
     check(isValidApproxKg(raw.approxQuantityKg), "approxQuantityKg");
     check(raw.notes === undefined || withinLength(String(raw.notes || ""), MAX_LENGTHS.notes), "notes");
+    check(isValidItemQuantitiesObject(raw.itemQuantities), "itemQuantities");
 
-    const items = validateIdArray(raw.selectedItemIds, GENERATED_ALLOWLIST.PARTY_ITEM_IDS, MAX_SELECTED_ITEMS);
+    const itemQuantities = (raw.itemQuantities && typeof raw.itemQuantities === "object") ? raw.itemQuantities : null;
+    const items = validateIdArray(raw.selectedItemIds, GENERATED_ALLOWLIST.PARTY_ITEM_IDS, MAX_SELECTED_ITEMS, itemQuantities);
     check(items.ok, "selectedItemIds");
     check(!items.ok || items.labels.length > 0, "selectedItemIds");
 
@@ -425,6 +471,7 @@ function validateAndNormalize(requestType, raw) {
         approxQuantityKg: raw.approxQuantityKg ? Number(raw.approxQuantityKg) : "",
         eventDate: eventDate,
         deliveryLocation: raw.deliveryLocation.trim(),
+        clientEstimatedTotal: sanitizeForDisplay(raw.clientEstimatedTotal),
         notes: raw.notes ? String(raw.notes).trim() : "",
       }),
     };

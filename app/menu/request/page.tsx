@@ -231,8 +231,22 @@ function RequestForm() {
     setStatus("submitting");
     setErrorMessage("");
 
+    const hasVegMeal = values.selectedMeals.some((id) => id.startsWith("veg-"));
     const hasNonVegMeal = values.selectedMeals.some((id) => id.startsWith("non-veg-"));
-    const effectiveFoodPreference = hasNonVegMeal ? "Non-Veg" : (values.foodPreference || "Veg");
+    const hasDessert = values.selectedAddOns.length > 0;
+
+    let effectiveFoodPreference = "Veg";
+    if (hasVegMeal && hasNonVegMeal) {
+      effectiveFoodPreference = "Veg & Non-Veg";
+    } else if (hasVegMeal) {
+      effectiveFoodPreference = "Veg";
+    } else if (hasNonVegMeal) {
+      effectiveFoodPreference = "Non-Veg";
+    } else if (hasDessert) {
+      effectiveFoodPreference = "Desserts";
+    } else if (values.foodPreference) {
+      effectiveFoodPreference = values.foodPreference;
+    }
 
     const result = await submitToGoogleSheets({
       requestType: REQUEST_TYPES.INDIVIDUAL_MEAL,
