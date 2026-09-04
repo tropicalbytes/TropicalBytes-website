@@ -92,17 +92,6 @@ export default function ContactPage() {
               <ContactRow key={row.label} icon={row.icon} label={row.label} value={row.value()} href={row.href?.()} />
             ))}
           </div>
-
-          <div className="mt-6 overflow-hidden rounded-xl2 border border-sand shadow-soft">
-            <iframe
-              title="TropicalBytes location map"
-              src={business.mapsEmbedUrl}
-              width="100%"
-              height="260"
-              style={{ border: 0 }}
-              loading="lazy"
-            />
-          </div>
         </Reveal>
 
         <Reveal delay={100}>
