@@ -6,13 +6,13 @@ import Reveal from "@/components/Reveal";
 import MultiSelectCombobox from "@/components/MultiSelectCombobox";
 import { business, partyBulkOrders, buildPartyOptionGroups, getPartyItemPrice, getPartyItemDetails, formatINR } from "@/lib/config";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
-import { isRequired, isValidEmail, isValidPhone, isFutureOrTodayDate, isWithinFutureWindow, isEmptyOrPositiveNumber, maxLength, validate } from "@/lib/validation";
+import { isRequired, isValidEmail, isValidPhone, isFutureOrTodayDate, isWithinFutureWindow, maxLength, validate } from "@/lib/validation";
 import { REQUEST_TYPES, MAX_FUTURE_DATE_DAYS, MAX_LENGTHS } from "@/lib/constants";
 import SuccessScreen from "@/components/SuccessScreen";
 import ErrorMessage from "@/components/ErrorMessage";
 import { Button } from "@/components/Button";
 import { CardHeader, IconInput, IconTextarea, Field } from "@/components/FormKit";
-import { Users, Clock, Package, Leaf, FileText, User, Phone as PhoneIcon, Mail, Hash, Calendar, MapPin, MessageSquare, Receipt } from "lucide-react";
+import { Users, Clock, Package, Leaf, FileText, User, Phone as PhoneIcon, Mail, Calendar, MapPin, MessageSquare, Receipt } from "lucide-react";
 
 const partyGroups = buildPartyOptionGroups();
 
@@ -22,7 +22,6 @@ export default function PartyRequestPage() {
     phone: "",
     email: "",
     eventDate: "",
-    approxKg: "",
     location: "",
     notes: "",
     honeypot: "",
@@ -118,7 +117,6 @@ export default function PartyRequestPage() {
         email: [isRequired, isValidEmail],
         eventDate: [isRequired, isFutureOrTodayDate, isWithinFutureWindow(MAX_FUTURE_DATE_DAYS)],
         location: [isRequired],
-        approxKg: [isEmptyOrPositiveNumber],
         selectedItems: [isRequired],
       },
       {
@@ -127,7 +125,6 @@ export default function PartyRequestPage() {
         email: "Enter a valid email address.",
         eventDate: `Please choose a valid date (today, up to ${MAX_FUTURE_DATE_DAYS} days out).`,
         location: "Please enter the delivery location.",
-        approxKg: "Enter a positive number, or leave this blank.",
         selectedItems: "Please select at least one item.",
       }
     );
@@ -149,7 +146,6 @@ export default function PartyRequestPage() {
       selectedItemIds: selectedItems,
       itemQuantities: itemQuantities,
       clientEstimatedTotal: totalPrice > 0 ? formatINR(totalPrice) : undefined,
-      approxQuantityKg: values.approxKg,
       eventDate: values.eventDate,
       deliveryLocation: values.location,
       notes: values.notes,
@@ -261,7 +257,7 @@ export default function PartyRequestPage() {
       {/* "Your Details" form — overlaps the hero slightly for an intentional transition */}
       <section className="relative mx-auto max-w-content px-5 pb-16 md:px-8">
         <div className="relative z-10 mx-auto -mt-8 max-w-2xl rounded-3xl border border-sand bg-white p-6 shadow-soft sm:p-9 md:-mt-12">
-          <CardHeader icon={FileText} title="Your Details" />
+          <CardHeader icon={Package} title="Order Details" />
 
         <form onSubmit={handleSubmit} noValidate className="space-y-8">
           <input
@@ -273,23 +269,8 @@ export default function PartyRequestPage() {
             autoComplete="off"
           />
 
-          <fieldset className="space-y-5">
-            <legend className="sr-only">Your Details</legend>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field label="Full Name" error={errors.fullName} className="sm:col-span-2">
-                <IconInput icon={User} value={values.fullName} onChange={(v) => update("fullName", v)} placeholder="Enter your full name" />
-              </Field>
-              <Field label="Phone Number" error={errors.phone}>
-                <IconInput icon={PhoneIcon} value={values.phone} onChange={(v) => update("phone", v)} placeholder="Enter your phone number" inputMode="tel" />
-              </Field>
-              <Field label="Email" error={errors.email}>
-                <IconInput icon={Mail} type="email" value={values.email} onChange={(v) => update("email", v)} placeholder="Enter your email" />
-              </Field>
-            </div>
-          </fieldset>
-
           <fieldset className="space-y-6">
-            <legend className="font-display text-lg font-semibold text-forest">Order Details</legend>
+            <legend className="sr-only">Order Details</legend>
 
             <div>
               <MultiSelectCombobox
@@ -343,11 +324,25 @@ export default function PartyRequestPage() {
                 )}
               </div>
             </div>
+          </fieldset>
 
+          <fieldset className="space-y-5">
+            <legend className="font-display text-lg font-semibold text-forest">Your Details</legend>
             <div className="grid gap-5 sm:grid-cols-2">
-              <Field label="Approx. Total Quantity (kg)" error={errors.approxKg}>
-                <IconInput icon={Hash} value={values.approxKg} onChange={(v) => update("approxKg", v)} placeholder="Enter quantity in kg" inputMode="numeric" />
+              <Field label="Full Name" error={errors.fullName} className="sm:col-span-2">
+                <IconInput icon={User} value={values.fullName} onChange={(v) => update("fullName", v)} placeholder="Enter your full name" />
               </Field>
+              <Field label="Phone Number" error={errors.phone}>
+                <IconInput icon={PhoneIcon} value={values.phone} onChange={(v) => update("phone", v)} placeholder="Enter your phone number" inputMode="tel" />
+              </Field>
+              <Field label="Email" error={errors.email}>
+                <IconInput icon={Mail} type="email" value={values.email} onChange={(v) => update("email", v)} placeholder="Enter your email" />
+              </Field>
+            </div>
+          </fieldset>
+
+          <div className="space-y-6">
+            <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Event Date" error={errors.eventDate}>
                 <IconInput
                   icon={Calendar}
@@ -376,7 +371,7 @@ export default function PartyRequestPage() {
             <Field label="Additional Notes">
               <IconTextarea icon={MessageSquare} className="min-h-[90px]" value={values.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Guest count, timing, serving style, etc. (optional)" />
             </Field>
-          </fieldset>
+          </div>
 
           {status === "error" && <ErrorMessage message={errorMessage} />}
 

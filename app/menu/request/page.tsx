@@ -5,8 +5,8 @@ import PageHero from "@/components/PageHero";
 import MultiSelectCombobox from "@/components/MultiSelectCombobox";
 import { business, FoodType, buildMealOptionGroups, buildAddOnOptionGroups, formatINR, getIndividualItemPrice, getIndividualItemLabel } from "@/lib/config";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
-import { isRequired, isValidEmail, isValidPhone, isFutureOrTodayDate, isWithinFutureWindow, maxLength, isValidQuantity, validate } from "@/lib/validation";
-import { REQUEST_TYPES, MAX_FUTURE_DATE_DAYS, MAX_LENGTHS, MEAL_PREFERENCE_OPTIONS } from "@/lib/constants";
+import { isRequired, isValidEmail, isValidPhone, maxLength, validate } from "@/lib/validation";
+import { REQUEST_TYPES, MAX_LENGTHS, MEAL_PREFERENCE_OPTIONS } from "@/lib/constants";
 import SuccessScreen from "@/components/SuccessScreen";
 import ErrorMessage from "@/components/ErrorMessage";
 import { Button } from "@/components/Button";
@@ -24,9 +24,7 @@ import {
   Phone as PhoneIcon,
   Mail,
   MapPin,
-  Calendar,
   MessageSquare,
-  Hash,
   Receipt,
   LucideIcon,
 } from "lucide-react";
@@ -39,8 +37,6 @@ type FormState = {
   foodPreference: string;
   selectedMeals: string[];
   selectedAddOns: string[];
-  quantity: string;
-  date: string;
   location: string;
   notes: string;
   honeypot: string;
@@ -67,8 +63,6 @@ function RequestForm() {
     foodPreference: "Veg",
     selectedMeals: [],
     selectedAddOns: [],
-    quantity: "1",
-    date: "",
     location: "",
     notes: "",
     honeypot: "",
@@ -193,8 +187,6 @@ function RequestForm() {
         email: values.email,
         mealTime: values.mealTime,
         foodPreference: values.foodPreference,
-        quantity: values.quantity,
-        date: values.date,
         location: values.location,
       },
       {
@@ -203,8 +195,6 @@ function RequestForm() {
         email: [isRequired, isValidEmail],
         mealTime: [isRequired],
         foodPreference: [isRequired],
-        quantity: [isRequired, isValidQuantity],
-        date: [isRequired, isFutureOrTodayDate, isWithinFutureWindow(MAX_FUTURE_DATE_DAYS)],
         location: [isRequired],
       },
       {
@@ -213,8 +203,6 @@ function RequestForm() {
         email: "Enter a valid email address.",
         mealTime: "Please choose lunch, dinner, or both.",
         foodPreference: "Please choose vegetarian or non-vegetarian.",
-        quantity: "Please enter a valid quantity (minimum 1).",
-        date: `Please choose a valid date (today, up to ${MAX_FUTURE_DATE_DAYS} days out).`,
         location: "Please enter your delivery location.",
       }
     );
@@ -258,8 +246,6 @@ function RequestForm() {
       mealTime: values.mealTime,
       foodPreference: effectiveFoodPreference,
       selectedMealIds: values.selectedMeals,
-      quantity: values.quantity,
-      preferredDate: values.date,
       deliveryLocation: values.location,
       selectedAddOnIds: values.selectedAddOns,
       itemQuantities: itemQuantities,
@@ -425,37 +411,6 @@ function RequestForm() {
                 </Field>
                 <Field label="Email" error={errors.email}>
                   <IconInput icon={Mail} type="email" value={values.email} onChange={(v) => update("email", v)} placeholder="Enter your email" />
-                </Field>
-              </div>
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Quantity" error={errors.quantity}>
-                  <IconInput
-                    icon={Hash}
-                    type="number"
-                    min="1"
-                    step="1"
-                    placeholder="Enter quantity"
-                    value={values.quantity}
-                    onChange={(v) => update("quantity", v)}
-                    onKeyDown={(e) => {
-                      if (e.key === "." || e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
-                    }}
-                  />
-                </Field>
-                <Field label="Preferred Date" error={errors.date}>
-                  <IconInput
-                    icon={Calendar}
-                    type="date"
-                    value={values.date}
-                    onChange={(v) => update("date", v)}
-                    min={new Date().toISOString().split("T")[0]}
-                    max={(() => {
-                      const d = new Date();
-                      d.setDate(d.getDate() + MAX_FUTURE_DATE_DAYS);
-                      return d.toISOString().split("T")[0];
-                    })()}
-                  />
                 </Field>
               </div>
 

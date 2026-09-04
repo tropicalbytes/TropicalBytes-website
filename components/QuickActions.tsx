@@ -1,14 +1,24 @@
+import Link from "next/link";
+import { Home } from "lucide-react";
 import { business } from "@/lib/config";
 
 export default function QuickActions() {
   return (
     <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3">
+      <Link
+        href="/"
+        aria-label="Home"
+        className="grid place-items-center rounded-full bg-forest-dark text-cream shadow-soft transition-transform hover:scale-105"
+        style={{ width: 52, height: 52 }}
+      >
+        <Home size={22} strokeWidth={1.8} />
+      </Link>
       <a
         href={`https://wa.me/${business.whatsapp}`}
         target="_blank"
         rel="noreferrer"
         aria-label="Chat on WhatsApp"
-        className="grid h-13 w-13 h-13 place-items-center rounded-full bg-forest text-cream shadow-soft transition-transform hover:scale-105"
+        className="grid place-items-center rounded-full bg-forest text-cream shadow-soft transition-transform hover:scale-105"
         style={{ width: 52, height: 52 }}
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -18,7 +28,7 @@ export default function QuickActions() {
       <a
         href={`tel:${business.phone.replace(/\s/g, "")}`}
         aria-label="Call us"
-        className="grid place-items-center rounded-full bg-copper text-cream shadow-soft transition-transform hover:scale-105"
+        className="grid place-items-center rounded-full bg-forest-light text-cream shadow-soft transition-transform hover:scale-105"
         style={{ width: 52, height: 52 }}
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">

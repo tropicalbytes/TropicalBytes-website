@@ -39,7 +39,7 @@ export const nav = [
   { label: "Subscription Plans", href: "/plans" },
   { label: "Individual Meal", href: "/menu/request" },
   { label: "Party & Bulk", href: "/party-request" },
-  { label: "Menu", href: "/menu" },
+  { label: "Subscription Menu", href: "/menu" },
   { label: "Contact", href: "/contact" },
 ];
 

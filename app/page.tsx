@@ -100,7 +100,7 @@ export default function HomePage() {
                   Explore Plans
                 </LinkButton>
                 <LinkButton href="/menu" variant="secondary">
-                  Menu
+                  Subscription Menu
                 </LinkButton>
               </div>
             </Reveal>

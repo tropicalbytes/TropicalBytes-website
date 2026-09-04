@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   business,
@@ -8,19 +8,16 @@ import {
   SubscriptionTier,
   FoodType,
   findPlanOption,
-  buildMealOptionGroups,
-  buildAddOnOptionGroups,
   formatINR,
 } from "@/lib/config";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
-import { REQUEST_TYPES, MAX_FUTURE_DATE_DAYS, MAX_LENGTHS, MEAL_PREFERENCE_OPTIONS, FOOD_PREFERENCE_OPTIONS, QUANTITY_OPTIONS } from "@/lib/constants";
-import { isRequired, isValidEmail, isValidPhone, isValidPincode, isFutureOrTodayDate, isWithinFutureWindow, maxLength, isValidQuantity, validate } from "@/lib/validation";
+import { REQUEST_TYPES, MAX_FUTURE_DATE_DAYS, MAX_LENGTHS, MEAL_PREFERENCE_OPTIONS, FOOD_PREFERENCE_OPTIONS } from "@/lib/constants";
+import { isRequired, isValidEmail, isValidPhone, isValidPincode, isFutureOrTodayDate, isWithinFutureWindow, maxLength, validate } from "@/lib/validation";
 import SuccessScreen from "@/components/SuccessScreen";
 import ErrorMessage from "@/components/ErrorMessage";
-import MultiSelectCombobox from "@/components/MultiSelectCombobox";
 import { CardHeader, IconInput, IconTextarea, Field, SelectPill, FORM_CARD_CLASS } from "@/components/FormKit";
 import { Button } from "@/components/Button";
-import { User, Phone as PhoneIcon, Mail, Settings2, Utensils, Truck, FileCheck, Hash, Calendar, Home, MapPinned, Landmark, MessageSquare } from "lucide-react";
+import { User, Phone as PhoneIcon, Mail, Settings2, Truck, FileCheck, Hash, Calendar, Home, MapPinned, Landmark, MessageSquare } from "lucide-react";
 
 type FormState = {
   fullName: string;
@@ -30,9 +27,6 @@ type FormState = {
   mealCount: string; // "1" | "2"
   mealPreference: string;
   foodPreference: string;
-  selectedMeals: string[];
-  selectedAddOns: string[];
-  quantity: string;
   startDate: string;
   address: string;
   area: string;
@@ -50,9 +44,6 @@ const initialState: FormState = {
   mealCount: "",
   mealPreference: "",
   foodPreference: "",
-  selectedMeals: [],
-  selectedAddOns: [],
-  quantity: "1",
   startDate: "",
   address: "",
   area: "",
@@ -62,8 +53,7 @@ const initialState: FormState = {
   honeypot: "",
 };
 
-const STEPS = ["Plan & Preferences", "Your Details", "Meals & Add-ons", "Delivery Details", "Review & Submit"];
-const addOnGroups = buildAddOnOptionGroups();
+const STEPS = ["Plan & Preferences", "Your Details", "Delivery Details", "Review & Submit"];
 const MEAL_COUNT_OPTIONS = [
   { value: "1", label: "1 Meal" },
   { value: "2", label: "2 Meals" },
@@ -81,27 +71,10 @@ function SubscribeForm() {
 
   const selectedTier = useMemo(() => subscriptionTiers.find((t) => t.id === values.tierId), [values.tierId]);
 
-  const mealGroups = useMemo(() => {
-    if (!values.foodPreference) return [];
-    return buildMealOptionGroups(values.foodPreference as FoodType);
-  }, [values.foodPreference]);
-
   const selectedPlanOption = useMemo(() => {
     if (!values.tierId || !values.foodPreference || !values.mealCount) return undefined;
     return findPlanOption(values.tierId, values.foodPreference as FoodType, Number(values.mealCount) as 1 | 2);
   }, [values.tierId, values.foodPreference, values.mealCount]);
-
-  // Smart logic: when food preference changes, drop any selected dishes
-  // that are no longer valid for the new preference.
-  useEffect(() => {
-    const validIds = new Set(mealGroups.flatMap((g) => g.options.map((o) => o.id)));
-    setValues((v) => {
-      const filtered = v.selectedMeals.filter((id) => validIds.has(id));
-      if (filtered.length === v.selectedMeals.length) return v;
-      return { ...v, selectedMeals: filtered };
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values.foodPreference]);
 
   const update = (field: keyof FormState, value: string) => setValues((v) => ({ ...v, [field]: value }));
 
@@ -124,15 +97,15 @@ function SubscribeForm() {
       },
     },
     2: {
-      rules: { startDate: [isRequired, isFutureOrTodayDate, isWithinFutureWindow(MAX_FUTURE_DATE_DAYS)], quantity: [isRequired, isValidQuantity] },
+      rules: {
+        startDate: [isRequired, isFutureOrTodayDate, isWithinFutureWindow(MAX_FUTURE_DATE_DAYS)],
+        address: [isRequired, maxLength(MAX_LENGTHS.address)],
+        area: [isRequired],
+        city: [isRequired],
+        pincode: [isRequired, isValidPincode],
+      },
       messages: {
         startDate: `Please choose a valid start date (today, up to ${MAX_FUTURE_DATE_DAYS} days out).`,
-        quantity: "Please enter a valid quantity (minimum 1).",
-      },
-    },
-    3: {
-      rules: { address: [isRequired, maxLength(MAX_LENGTHS.address)], area: [isRequired], city: [isRequired], pincode: [isRequired, isValidPincode] },
-      messages: {
         address: "Please enter your full address.",
         area: "Please enter your area or locality.",
         city: "Please enter your city.",
@@ -149,7 +122,6 @@ function SubscribeForm() {
     mealCount: values.mealCount,
     mealPreference: values.mealPreference,
     foodPreference: values.foodPreference,
-    quantity: values.quantity,
     startDate: values.startDate,
     address: values.address,
     area: values.area,
@@ -181,11 +153,6 @@ function SubscribeForm() {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const labelsFor = (ids: string[], groups: { options: { id: string; label: string }[] }[]) => {
-    const all = groups.flatMap((g) => g.options);
-    return ids.map((id) => all.find((o) => o.id === id)?.label || id);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -197,10 +164,10 @@ function SubscribeForm() {
     if (values.honeypot) return; // silently drop bot submissions
     if (status === "submitting") return;
 
-    const allErrors = { ...validateStep(0), ...validateStep(1), ...validateStep(2), ...validateStep(3) };
+    const allErrors = { ...validateStep(0), ...validateStep(1), ...validateStep(2) };
     setErrors(allErrors);
     if (Object.keys(allErrors).length > 0) {
-      const firstInvalidStep = [0, 1, 2, 3].find((s) => Object.keys(validateStep(s)).length > 0);
+      const firstInvalidStep = [0, 1, 2].find((s) => Object.keys(validateStep(s)).length > 0);
       if (firstInvalidStep !== undefined) setStep(firstInvalidStep);
       return;
     }
@@ -220,11 +187,7 @@ function SubscribeForm() {
       planOptionId: selectedPlanOption ? selectedPlanOption.id : "",
       mealPreference: values.mealPreference,
       foodPreference: values.foodPreference,
-      // IDs, not label text — the backend looks these up in its own
-      // allowlist and never trusts free-text labels from the browser.
-      selectedMealIds: values.selectedMeals,
-      selectedAddOnIds: values.selectedAddOns,
-      quantity: values.quantity,
+      quantity: "1",
       startDate: values.startDate,
       clientEstimatedTotal: selectedPlanOption ? selectedPlanOption.totalPrice : null,
       address: values.address,
@@ -361,74 +324,25 @@ function SubscribeForm() {
         )}
 
         {step === 2 && (
-          <fieldset className="space-y-6">
-            <CardHeader icon={Utensils} title="Meals & Add-ons" />
-            <p className="-mt-3 text-sm text-ink/60">
-              Optional: tell us your favourite dishes and any dessert extras.
-            </p>
-
-            {mealGroups.length > 0 ? (
-              <MultiSelectCombobox
-                label="Select Your Meals (optional)"
-                placeholder="Search dishes..."
-                groups={mealGroups}
-                selected={values.selectedMeals}
-                onChange={(ids) => setValues((v) => ({ ...v, selectedMeals: ids }))}
-                helperText="Showing dishes for your chosen food preference."
-              />
-            ) : (
-              <p className="rounded-xl border border-sand bg-sand/30 px-4 py-3 text-sm text-ink/60">
-                Choose a food preference in the previous step to see matching dishes.
-              </p>
-            )}
-
-            <MultiSelectCombobox
-              label="Desserts (optional)"
-              placeholder="Search desserts..."
-              groups={addOnGroups}
-              selected={values.selectedAddOns}
-              onChange={(ids) => setValues((v) => ({ ...v, selectedAddOns: ids }))}
-            />
-
-            <div className="grid gap-6 sm:grid-cols-2">
-              <Field label="Quantity" error={errors.quantity}>
-                <IconInput
-                  icon={Hash}
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder="Enter quantity"
-                  value={values.quantity}
-                  onChange={(v) => update("quantity", v)}
-                  onKeyDown={(e) => {
-                    if (e.key === '.' || e.key === '-' || e.key === 'e' || e.key === 'E') {
-                      e.preventDefault();
-                    }
-                  }}
-                />
-              </Field>
-              <Field label="Preferred Start Date" error={errors.startDate}>
-                <IconInput
-                  icon={Calendar}
-                  type="date"
-                  value={values.startDate}
-                  onChange={(v) => update("startDate", v)}
-                  min={new Date().toISOString().split("T")[0]}
-                  max={(() => {
-                    const d = new Date();
-                    d.setDate(d.getDate() + MAX_FUTURE_DATE_DAYS);
-                    return d.toISOString().split("T")[0];
-                  })()}
-                />
-              </Field>
-            </div>
-          </fieldset>
-        )}
-
-        {step === 3 && (
           <fieldset className="space-y-5">
             <CardHeader icon={Truck} title="Delivery Details" />
-            <p className="-mt-3 text-sm text-ink/60">Where should we send your meals?</p>
+
+            <Field label="Preferred Start Date" error={errors.startDate}>
+              <IconInput
+                icon={Calendar}
+                type="date"
+                value={values.startDate}
+                onChange={(v) => update("startDate", v)}
+                min={new Date().toISOString().split("T")[0]}
+                max={(() => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + MAX_FUTURE_DATE_DAYS);
+                  return d.toISOString().split("T")[0];
+                })()}
+              />
+            </Field>
+
+            <p className="text-sm text-ink/60">Where should we send your meals?</p>
             <Field label="Full Address" error={errors.address}>
               <IconTextarea icon={Home} className="min-h-[90px]" value={values.address} onChange={(e) => update("address", e.target.value)} placeholder="House / flat no., street, landmark" />
             </Field>
@@ -449,7 +363,7 @@ function SubscribeForm() {
           </fieldset>
         )}
 
-        {step === 4 && (
+        {step === 3 && (
           <fieldset className="space-y-5">
             <CardHeader icon={FileCheck} title="Review & Submit" />
             <p className="-mt-3 text-sm text-ink/60">Take a moment to check everything looks right.</p>
@@ -469,14 +383,8 @@ function SubscribeForm() {
                 <ReviewRow label="Email" value={values.email} />
               </ReviewGroup>
 
-              <ReviewGroup title="Meals & Add-ons" onEdit={() => goToStep(2)}>
-                <ReviewRow label="Selected Meals" value={labelsFor(values.selectedMeals, mealGroups).join(", ") || "Team's choice"} />
-                <ReviewRow label="Desserts" value={labelsFor(values.selectedAddOns, addOnGroups).join(", ") || "None"} />
-                <ReviewRow label="Quantity" value={`${values.quantity} ${values.quantity === "1" ? "person" : "people"}`} />
+              <ReviewGroup title="Delivery Details" onEdit={() => goToStep(2)}>
                 <ReviewRow label="Start Date" value={values.startDate || "-"} />
-              </ReviewGroup>
-
-              <ReviewGroup title="Delivery Details" onEdit={() => goToStep(3)}>
                 <ReviewRow label="Address" value={values.address} />
                 <ReviewRow label="Area" value={values.area} />
                 <ReviewRow label="City" value={values.city} />
@@ -547,22 +455,22 @@ function TierOption({ tier, selected, onSelect }: { tier: SubscriptionTier; sele
 function ReviewGroup({ title, onEdit, children }: { title: string; onEdit: () => void; children: React.ReactNode }) {
   return (
     <div className="border-b border-sand pb-4 last:border-0 last:pb-0">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2.5 flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-widest text-copper">{title}</p>
         <button type="button" onClick={onEdit} className="text-xs font-medium text-forest underline underline-offset-2 hover:text-copper">
           Edit
         </button>
       </div>
-      <div className="space-y-1.5">{children}</div>
+      <div>{children}</div>
     </div>
   );
 }
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-4 text-sm">
-      <span className="shrink-0 text-ink/55">{label}</span>
-      <span className="text-right font-medium text-ink/85">{value}</span>
+    <div className="grid grid-cols-2 text-sm">
+      <span className="border-r border-sand py-1.5 pr-4 text-left text-ink/55 sm:pr-6">{label}</span>
+      <span className="py-1.5 pl-4 text-left font-medium text-ink/85 break-words sm:pl-6">{value}</span>
     </div>
   );
 }

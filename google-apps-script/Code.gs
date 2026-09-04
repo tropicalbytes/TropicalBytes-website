@@ -326,18 +326,13 @@ function validateAndNormalize(requestType, raw) {
     check(isNonEmptyString(planOptionId) && Object.prototype.hasOwnProperty.call(GENERATED_ALLOWLIST.SUBSCRIPTION_PLANS, planOptionId), "planOptionId");
     check(isOneOf(mealPreference, GENERATED_ALLOWLIST.MEAL_PREFERENCES), "mealPreference");
     check(isOneOf(foodPreference, GENERATED_ALLOWLIST.FOOD_PREFERENCES), "foodPreference");
-    check(isValidQuantity(quantity), "quantity");
+    check(quantity === undefined || isValidQuantity(quantity), "quantity");
     check(isValidBusinessDate(startDate), "startDate");
     check(withinLength(raw.address, MAX_LENGTHS.address), "address");
     check(isNonEmptyString(raw.area), "area");
     check(isNonEmptyString(raw.city), "city");
     check(isValidPincode(raw.pincode), "pincode");
     check(raw.notes === undefined || withinLength(String(raw.notes || ""), MAX_LENGTHS.notes), "notes");
-
-    const meals = validateIdArray(raw.selectedMealIds, GENERATED_ALLOWLIST.MEAL_IDS, MAX_SELECTED_ITEMS);
-    check(meals.ok, "selectedMealIds");
-    const addOns = validateIdArray(raw.selectedAddOnIds, GENERATED_ALLOWLIST.ADDON_IDS, MAX_SELECTED_ITEMS);
-    check(addOns.ok, "selectedAddOnIds");
 
     if (errors.length > 0) return { ok: false, errors: errors };
 
@@ -352,10 +347,10 @@ function validateAndNormalize(requestType, raw) {
         duration: plan.deliveryLabel,
         mealPreference: mealPreference,
         foodPreference: foodPreference,
-        selectedMeals: meals.labels.join(", "),
-        quantity: Math.trunc(Number(quantity)),
+        selectedMeals: "",
+        quantity: quantity ? Math.trunc(Number(quantity)) : 1,
         startDate: startDate,
-        addOns: addOns.labels.join(", "),
+        addOns: "",
         estimatedTotal: "\u20B9" + plan.totalPrice.toLocaleString("en-IN"), // authoritative, server-side plan price
         clientEstimatedTotal: sanitizeForDisplay(raw.clientEstimatedTotal),
         address: raw.address.trim(),
@@ -370,14 +365,10 @@ function validateAndNormalize(requestType, raw) {
   if (requestType === REQUEST_TYPES.INDIVIDUAL_MEAL) {
     const mealTime = raw.mealTime;
     const foodPreference = raw.foodPreference;
-    const quantity = raw.quantity;
-    const date = raw.preferredDate;
 
     check(isOneOf(mealTime, GENERATED_ALLOWLIST.MEAL_PREFERENCES), "mealTime");
     const allowedFoodPrefs = ["Veg", "Non-Veg", "Veg & Non-Veg", "Desserts"];
     check(isOneOf(foodPreference, allowedFoodPrefs), "foodPreference");
-    check(isValidQuantity(quantity), "quantity");
-    check(isValidBusinessDate(date), "preferredDate");
     check(isNonEmptyString(raw.deliveryLocation) && withinLength(raw.deliveryLocation, MAX_LENGTHS.location), "deliveryLocation");
     check(raw.notes === undefined || withinLength(String(raw.notes || ""), MAX_LENGTHS.notes), "notes");
     check(isValidItemQuantitiesObject(raw.itemQuantities), "itemQuantities");
@@ -438,8 +429,6 @@ function validateAndNormalize(requestType, raw) {
         mealTime: mealTime,
         foodPreference: computedFoodPreference,
         selectedMeals: finalSelectedMeals,
-        quantity: Math.trunc(Number(quantity)),
-        preferredDate: date,
         deliveryLocation: raw.deliveryLocation.trim(),
         addOns: finalAddOns,
         clientEstimatedTotal: sanitizeForDisplay(raw.clientEstimatedTotal),
@@ -453,7 +442,6 @@ function validateAndNormalize(requestType, raw) {
 
     check(isValidBusinessDate(eventDate), "eventDate");
     check(isNonEmptyString(raw.deliveryLocation) && withinLength(raw.deliveryLocation, MAX_LENGTHS.location), "deliveryLocation");
-    check(isValidApproxKg(raw.approxQuantityKg), "approxQuantityKg");
     check(raw.notes === undefined || withinLength(String(raw.notes || ""), MAX_LENGTHS.notes), "notes");
     check(isValidItemQuantitiesObject(raw.itemQuantities), "itemQuantities");
 
@@ -468,7 +456,6 @@ function validateAndNormalize(requestType, raw) {
       ok: true,
       data: Object.assign({}, base, {
         selectedItems: items.labels.join(", "),
-        approxQuantityKg: raw.approxQuantityKg ? Number(raw.approxQuantityKg) : "",
         eventDate: eventDate,
         deliveryLocation: raw.deliveryLocation.trim(),
         clientEstimatedTotal: sanitizeForDisplay(raw.clientEstimatedTotal),
@@ -641,13 +628,13 @@ function appendRow(sheet, sheetName, data) {
   } else if (sheetName === "Individual Meal Requests") {
     row = [
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
-      safeCell(data.mealTime), safeCell(data.foodPreference), safeCell(data.selectedMeals), data.quantity, safeCell(data.preferredDate),
+      safeCell(data.mealTime), safeCell(data.foodPreference), safeCell(data.selectedMeals), "", "",
       safeCell(data.deliveryLocation), safeCell(data.addOns), safeCell(data.notes), safeCell(data.status),
     ];
   } else if (sheetName === "Party Bulk Orders") {
     row = [
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
-      safeCell(data.selectedItems), data.approxQuantityKg, safeCell(data.eventDate), safeCell(data.deliveryLocation),
+      safeCell(data.selectedItems), "", safeCell(data.eventDate), safeCell(data.deliveryLocation),
       safeCell(data.notes), safeCell(data.status),
     ];
   } else {
