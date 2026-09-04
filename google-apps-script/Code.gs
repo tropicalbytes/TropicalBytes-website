@@ -5,7 +5,7 @@
  * The frontend is NOT trusted. Anyone can send a request directly to this
  * Web App URL, bypassing the website entirely. Every field is therefore
  * re-validated here against allowlists, and every business-sensitive value
- * (status, enquiry ID, timestamp, price) is generated/recalculated on this
+ * (enquiry ID, timestamp, price) is generated/recalculated on this
  * side rather than trusted from the request body.
  *
  * PIPELINE
@@ -15,7 +15,7 @@
  *     -> validate request type (allowlist)
  *     -> validate + normalize fields for that type
  *     -> validate business rules (plan option exists, ids are known, etc.)
- *     -> generate server-controlled values (enquiryId, timestamp, status, price)
+ *     -> generate server-controlled values (enquiryId, timestamp, price)
  *     -> sanitize every string for safe spreadsheet storage
  *     -> append row -> send email (independently try/caught)
  *     -> return a generic {status, message} — never a raw error
@@ -62,21 +62,20 @@ const HEADERS = {
     "Enquiry ID", "Submission Date", "Request Type", "Customer Name", "Phone Number", "Email",
     "Selected Plan", "Duration", "Meal Preference", "Food Preference", "Selected Meals",
     "Quantity", "Preferred Start Date", "Add-ons", "Estimated Total (Server)", "Client Estimated Total",
-    "Full Address", "Area", "City", "Pincode", "Additional Notes", "Status",
+    "Full Address", "Area", "City", "Pincode", "Additional Notes",
   ],
   "Individual Meal Requests": [
     "Enquiry ID", "Submission Date", "Request Type", "Customer Name", "Phone Number", "Email",
     "Meal Time", "Food Preference", "Selected Meals", "Quantity", "Preferred Date",
-    "Delivery Location", "Add-ons", "Additional Notes", "Status",
+    "Delivery Location", "Add-ons", "Additional Notes",
   ],
   "Party Bulk Orders": [
     "Enquiry ID", "Submission Date", "Request Type", "Customer Name", "Phone Number", "Email",
-    "Selected Items", "Approx Quantity (kg)", "Event Date", "Delivery Location",
-    "Additional Notes", "Status",
+    "Selected Items", "Event Date", "Delivery Location", "Additional Notes",
   ],
   "Contact Enquiries": [
     "Enquiry ID", "Submission Date", "Request Type", "Customer Name", "Phone Number", "Email",
-    "Message", "Status",
+    "Message",
   ],
 };
 
@@ -84,7 +83,6 @@ const HEADERS = {
 const MAX_FUTURE_DATE_DAYS = 120;
 const MAX_LENGTHS = { name: 100, address: 300, notes: 500, message: 1000, location: 300 };
 const MAX_QUANTITY = 20; // per-person meal quantity / item count sanity ceiling
-const MAX_APPROX_KG = 500; // bulk order sanity ceiling
 const MAX_SELECTED_ITEMS = 40; // guard against absurdly large arrays
 const MAX_REQUEST_BYTES = 20000; // ~20 KB is generous for these forms
 const MAX_REQUESTS_PER_MINUTE = 30; // coarse, global — see README limitations note
@@ -235,12 +233,6 @@ function isValidQuantity(v) {
   return Number.isFinite(n) && Number.isInteger(n) && n >= 1 && n <= MAX_QUANTITY;
 }
 
-function isValidApproxKg(v) {
-  if (v === undefined || v === null || v === "") return true; // optional field
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 && n <= MAX_APPROX_KG;
-}
-
 function isOneOf(v, allowedList) {
   return allowedList.indexOf(v) !== -1;
 }
@@ -309,7 +301,6 @@ function validateAndNormalize(requestType, raw) {
     fullName: fullName,
     phone: phone,
     email: email,
-    status: "NEW", // always server-assigned, regardless of what the client sent
   };
 
   if (requestType === REQUEST_TYPES.SUBSCRIPTION) {
@@ -623,24 +614,24 @@ function appendRow(sheet, sheetName, data) {
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
       safeCell(data.selectedPlan), safeCell(data.duration), safeCell(data.mealPreference), safeCell(data.foodPreference), safeCell(data.selectedMeals),
       data.quantity, safeCell(data.startDate), safeCell(data.addOns), safeCell(data.estimatedTotal), safeCell(data.clientEstimatedTotal),
-      safeCell(data.address), safeCell(data.area), safeCell(data.city), safeCell(data.pincode), safeCell(data.notes), safeCell(data.status),
+      safeCell(data.address), safeCell(data.area), safeCell(data.city), safeCell(data.pincode), safeCell(data.notes),
     ];
   } else if (sheetName === "Individual Meal Requests") {
     row = [
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
       safeCell(data.mealTime), safeCell(data.foodPreference), safeCell(data.selectedMeals), "", "",
-      safeCell(data.deliveryLocation), safeCell(data.addOns), safeCell(data.notes), safeCell(data.status),
+      safeCell(data.deliveryLocation), safeCell(data.addOns), safeCell(data.notes),
     ];
   } else if (sheetName === "Party Bulk Orders") {
     row = [
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
-      safeCell(data.selectedItems), "", safeCell(data.eventDate), safeCell(data.deliveryLocation),
-      safeCell(data.notes), safeCell(data.status),
+      safeCell(data.selectedItems), safeCell(data.eventDate), safeCell(data.deliveryLocation),
+      safeCell(data.notes),
     ];
   } else {
     row = [
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
-      safeCell(data.message), safeCell(data.status),
+      safeCell(data.message),
     ];
   }
 

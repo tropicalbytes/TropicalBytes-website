@@ -51,14 +51,10 @@ Apps Script Web App URLs stay the same across **Manage deployments → Edit → 
 update `Code.gs` or `generated-allowlist.gs` later without changing the URL on the website side. You do
 need to create a **new version** in that dialog for edits to take effect on the live URL.
 
-## Managing enquiries
-Every row starts with **Status = NEW**, assigned by the backend regardless of what a request claims.
-Update this column manually as you work each enquiry through: `NEW → CONTACTED → CONFIRMED → COMPLETED`.
-
 ## Security model
 `Code.gs` assumes the frontend is not trusted — anyone can `curl` the Web App URL directly. It:
 - Re-validates every field against allowlists (never trusts a "meal preference is a string" style check)
-- Generates the Enquiry ID, submission timestamp, status, and subscription price itself — client-sent
+- Generates the Enquiry ID, submission timestamp, and subscription price itself — client-sent
   versions of these are ignored or kept only as a clearly-labeled non-authoritative reference
 - Escapes any value that looks like a spreadsheet formula before writing it to a cell
 - Applies a coarse, global per-minute request cap and suppresses obvious duplicate double-submits
