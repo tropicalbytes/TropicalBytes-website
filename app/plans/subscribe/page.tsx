@@ -187,7 +187,6 @@ function SubscribeForm() {
       planOptionId: selectedPlanOption ? selectedPlanOption.id : "",
       mealPreference: values.mealPreference,
       foodPreference: values.foodPreference,
-      quantity: "1",
       startDate: values.startDate,
       clientEstimatedTotal: selectedPlanOption ? selectedPlanOption.totalPrice : null,
       address: values.address,

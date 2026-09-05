@@ -60,13 +60,13 @@ SHEET_NAMES[REQUEST_TYPES.CONTACT] = "Contact Enquiries";
 const HEADERS = {
   "Subscription Requests": [
     "Enquiry ID", "Submission Date", "Request Type", "Customer Name", "Phone Number", "Email",
-    "Selected Plan", "Duration", "Meal Preference", "Food Preference", "Selected Meals",
-    "Quantity", "Preferred Start Date", "Add-ons", "Estimated Total (Server)", "Client Estimated Total",
+    "Selected Plan", "Duration", "Meal Preference", "Food Preference",
+    "Preferred Start Date", "Estimated Total (Server)", "Client Estimated Total",
     "Full Address", "Area", "City", "Pincode", "Additional Notes",
   ],
   "Individual Meal Requests": [
     "Enquiry ID", "Submission Date", "Request Type", "Customer Name", "Phone Number", "Email",
-    "Meal Time", "Food Preference", "Selected Meals", "Quantity", "Preferred Date",
+    "Meal Time", "Food Preference", "Selected Meals",
     "Delivery Location", "Add-ons", "Additional Notes",
   ],
   "Party Bulk Orders": [
@@ -307,7 +307,6 @@ function validateAndNormalize(requestType, raw) {
     const planOptionId = raw.planOptionId;
     const mealPreference = raw.mealPreference;
     const foodPreference = raw.foodPreference;
-    const quantity = raw.quantity;
     const startDate = raw.startDate;
 
     // Subscription pricing is a fixed, client-approved table (4 plan tiers
@@ -317,7 +316,6 @@ function validateAndNormalize(requestType, raw) {
     check(isNonEmptyString(planOptionId) && Object.prototype.hasOwnProperty.call(GENERATED_ALLOWLIST.SUBSCRIPTION_PLANS, planOptionId), "planOptionId");
     check(isOneOf(mealPreference, GENERATED_ALLOWLIST.MEAL_PREFERENCES), "mealPreference");
     check(isOneOf(foodPreference, GENERATED_ALLOWLIST.FOOD_PREFERENCES), "foodPreference");
-    check(quantity === undefined || isValidQuantity(quantity), "quantity");
     check(isValidBusinessDate(startDate), "startDate");
     check(withinLength(raw.address, MAX_LENGTHS.address), "address");
     check(isNonEmptyString(raw.area), "area");
@@ -338,10 +336,7 @@ function validateAndNormalize(requestType, raw) {
         duration: plan.deliveryLabel,
         mealPreference: mealPreference,
         foodPreference: foodPreference,
-        selectedMeals: "",
-        quantity: quantity ? Math.trunc(Number(quantity)) : 1,
         startDate: startDate,
-        addOns: "",
         estimatedTotal: "\u20B9" + plan.totalPrice.toLocaleString("en-IN"), // authoritative, server-side plan price
         clientEstimatedTotal: sanitizeForDisplay(raw.clientEstimatedTotal),
         address: raw.address.trim(),
@@ -612,14 +607,14 @@ function appendRow(sheet, sheetName, data) {
   if (sheetName === "Subscription Requests") {
     row = [
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
-      safeCell(data.selectedPlan), safeCell(data.duration), safeCell(data.mealPreference), safeCell(data.foodPreference), safeCell(data.selectedMeals),
-      data.quantity, safeCell(data.startDate), safeCell(data.addOns), safeCell(data.estimatedTotal), safeCell(data.clientEstimatedTotal),
+      safeCell(data.selectedPlan), safeCell(data.duration), safeCell(data.mealPreference), safeCell(data.foodPreference),
+      safeCell(data.startDate), safeCell(data.estimatedTotal), safeCell(data.clientEstimatedTotal),
       safeCell(data.address), safeCell(data.area), safeCell(data.city), safeCell(data.pincode), safeCell(data.notes),
     ];
   } else if (sheetName === "Individual Meal Requests") {
     row = [
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
-      safeCell(data.mealTime), safeCell(data.foodPreference), safeCell(data.selectedMeals), "", "",
+      safeCell(data.mealTime), safeCell(data.foodPreference), safeCell(data.selectedMeals),
       safeCell(data.deliveryLocation), safeCell(data.addOns), safeCell(data.notes),
     ];
   } else if (sheetName === "Party Bulk Orders") {
