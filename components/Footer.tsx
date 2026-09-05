@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { business, nav, secondaryNav } from "@/lib/config";
+import { business, nav } from "@/lib/config";
 
 export default function Footer() {
   return (
@@ -45,13 +45,6 @@ export default function Footer() {
             {nav.map((item) => (
               <li key={item.href}>
                 <Link href={item.href} className="text-cream/75 hover:text-cream">
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-            {secondaryNav.map((item) => (
-              <li key={item.href}>
-                <Link href={item.href} className="text-cream/60 hover:text-cream">
                   {item.label}
                 </Link>
               </li>

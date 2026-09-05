@@ -43,8 +43,7 @@ export const nav = [
   { label: "Contact", href: "/contact" },
 ];
 
-// Secondary links — kept live per client instruction, shown in the footer.
-export const secondaryNav = [{ label: "About", href: "/about" }];
+export const secondaryNav: { label: string; href: string }[] = [];
 
 // Decorative placeholder imagery for the homepage hero and About page banner.
 export const placeholderImages = {
