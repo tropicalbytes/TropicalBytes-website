@@ -6,11 +6,11 @@ import MultiSelectCombobox from "@/components/MultiSelectCombobox";
 import { business, FoodType, buildMealOptionGroups, buildAddOnOptionGroups, formatINR, getIndividualItemPrice, getIndividualItemLabel } from "@/lib/config";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
 import { isRequired, isValidEmail, isValidPhone, maxLength, validate } from "@/lib/validation";
-import { REQUEST_TYPES, MAX_LENGTHS, MEAL_PREFERENCE_OPTIONS } from "@/lib/constants";
+import { REQUEST_TYPES, MAX_LENGTHS } from "@/lib/constants";
 import SuccessScreen from "@/components/SuccessScreen";
 import ErrorMessage from "@/components/ErrorMessage";
 import { Button } from "@/components/Button";
-import { CardHeader, IconInput, Field, SelectPill, FORM_CARD_CLASS } from "@/components/FormKit";
+import { CardHeader, IconInput, Field, FORM_CARD_CLASS } from "@/components/FormKit";
 import {
   Sparkles,
   ShieldCheck,
@@ -33,7 +33,6 @@ type FormState = {
   fullName: string;
   phone: string;
   email: string;
-  mealTime: string;
   foodPreference: string;
   selectedMeals: string[];
   selectedAddOns: string[];
@@ -59,7 +58,6 @@ function RequestForm() {
     fullName: "",
     phone: "",
     email: "",
-    mealTime: "",
     foodPreference: "Veg",
     selectedMeals: [],
     selectedAddOns: [],
@@ -185,7 +183,6 @@ function RequestForm() {
         fullName: values.fullName,
         phone: values.phone,
         email: values.email,
-        mealTime: values.mealTime,
         foodPreference: values.foodPreference,
         location: values.location,
       },
@@ -193,7 +190,6 @@ function RequestForm() {
         fullName: [isRequired, maxLength(MAX_LENGTHS.name)],
         phone: [isRequired, isValidPhone],
         email: [isRequired, isValidEmail],
-        mealTime: [isRequired],
         foodPreference: [isRequired],
         location: [isRequired],
       },
@@ -201,7 +197,6 @@ function RequestForm() {
         fullName: "Please enter your full name.",
         phone: "Enter a valid 10-digit phone number.",
         email: "Enter a valid email address.",
-        mealTime: "Please choose lunch, dinner, or both.",
         foodPreference: "Please choose vegetarian or non-vegetarian.",
         location: "Please enter your delivery location.",
       }
@@ -243,7 +238,6 @@ function RequestForm() {
       fullName: values.fullName,
       phone: values.phone,
       email: values.email,
-      mealTime: values.mealTime,
       foodPreference: effectiveFoodPreference,
       selectedMealIds: values.selectedMeals,
       deliveryLocation: values.location,
@@ -348,16 +342,6 @@ function RequestForm() {
                     onDecrease={handleDecrease}
                   />
                 )}
-
-                <div className="border-t border-sand pt-6">
-                  <Field label="Meal Type" error={errors.mealTime}>
-                    <div className="flex flex-wrap gap-3">
-                      {MEAL_PREFERENCE_OPTIONS.map((m) => (
-                        <SelectPill key={m} label={m} selected={values.mealTime === m} onSelect={() => update("mealTime", m)} />
-                      ))}
-                    </div>
-                  </Field>
-                </div>
               </div>
             </div>
 

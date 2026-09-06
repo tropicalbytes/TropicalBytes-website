@@ -66,7 +66,7 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden lg:block">
-          <LinkButton href="/plans" className="!px-5 !py-2.5 text-xs">
+          <LinkButton href="/#our-plans" className="!px-5 !py-2.5 text-xs">
             Explore Meal Plans
           </LinkButton>
         </div>
@@ -109,7 +109,7 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
-            <LinkButton href="/plans" className="mt-2 justify-center">
+            <LinkButton href="/#our-plans" className="mt-2 justify-center">
               Explore Meal Plans
             </LinkButton>
           </nav>

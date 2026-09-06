@@ -90,7 +90,7 @@ export default function MenuPage() {
               </span>
               <h1 className="mt-3 font-display text-3xl font-extrabold text-ink sm:mt-4 sm:text-4xl">Our Subscription Menu</h1>
               <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-ink-secondary text-justify">
-                Fresh, home-style meals prepared for your everyday routine. Explore our selection of freshly
+                Fresh, chef-prepared meals prepared for your everyday routine. Explore our selection of freshly
                 prepared meals, sides, and desserts.
               </p>
               <div className="mt-5 sm:mt-6">

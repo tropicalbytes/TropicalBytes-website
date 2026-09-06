@@ -66,7 +66,7 @@ const HEADERS = {
   ],
   "Individual Meal Requests": [
     "Enquiry ID", "Submission Date", "Request Type", "Customer Name", "Phone Number", "Email",
-    "Meal Time", "Food Preference", "Selected Meals",
+    "Food Preference", "Selected Meals",
     "Delivery Location", "Add-ons", "Additional Notes",
   ],
   "Party Bulk Orders": [
@@ -349,10 +349,8 @@ function validateAndNormalize(requestType, raw) {
   }
 
   if (requestType === REQUEST_TYPES.INDIVIDUAL_MEAL) {
-    const mealTime = raw.mealTime;
     const foodPreference = raw.foodPreference;
 
-    check(isOneOf(mealTime, GENERATED_ALLOWLIST.MEAL_PREFERENCES), "mealTime");
     const allowedFoodPrefs = ["Veg", "Non-Veg", "Veg & Non-Veg", "Desserts"];
     check(isOneOf(foodPreference, allowedFoodPrefs), "foodPreference");
     check(isNonEmptyString(raw.deliveryLocation) && withinLength(raw.deliveryLocation, MAX_LENGTHS.location), "deliveryLocation");
@@ -412,7 +410,6 @@ function validateAndNormalize(requestType, raw) {
     return {
       ok: true,
       data: Object.assign({}, base, {
-        mealTime: mealTime,
         foodPreference: computedFoodPreference,
         selectedMeals: finalSelectedMeals,
         deliveryLocation: raw.deliveryLocation.trim(),
@@ -614,7 +611,7 @@ function appendRow(sheet, sheetName, data) {
   } else if (sheetName === "Individual Meal Requests") {
     row = [
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
-      safeCell(data.mealTime), safeCell(data.foodPreference), safeCell(data.selectedMeals),
+      safeCell(data.foodPreference), safeCell(data.selectedMeals),
       safeCell(data.deliveryLocation), safeCell(data.addOns), safeCell(data.notes),
     ];
   } else if (sheetName === "Party Bulk Orders") {

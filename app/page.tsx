@@ -96,7 +96,7 @@ export default function HomePage() {
 
             <Reveal delay={220}>
               <div className="mt-8 flex flex-wrap items-center gap-4">
-                <LinkButton href="/plans" withArrow>
+                <LinkButton href="/#our-plans" withArrow>
                   Explore Plans
                 </LinkButton>
                 <LinkButton href="/menu" variant="secondary">
@@ -158,7 +158,7 @@ export default function HomePage() {
       </section>
 
       {/* MEAL PLANS */}
-      <section className="mx-auto max-w-content px-5 py-20 md:px-8">
+      <section id="our-plans" className="scroll-mt-20 mx-auto max-w-content px-5 py-20 md:px-8">
         <Reveal className="text-center">
           <span className="inline-block rounded-full bg-palegreen px-3.5 py-1.5 text-xs font-semibold text-forest">Our Plans</span>
           <h2 className="mt-4 font-display text-3xl font-extrabold text-ink sm:text-4xl">Meals for Every Lifestyle</h2>
@@ -254,7 +254,7 @@ export default function HomePage() {
               <span className="text-forest">Everyday?</span>
             </h2>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink/80">
-              Join {business.name} today and experience the convenience of healthy, home-style meals delivered
+              Join {business.name} today and experience the convenience of healthy, chef-prepared meals delivered
               across {business.serviceAreas.slice(0, 2).join(" & ")}.
             </p>
             <div className="mt-7 flex flex-wrap gap-4">
