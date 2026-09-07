@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { LinkButton } from "@/components/Button";
 import Reveal from "@/components/Reveal";
-import StickyMobileCta from "@/components/StickyMobileCta";
 import DeliveryScooter from "@/components/icons/DeliveryScooter";
 import { business } from "@/lib/config";
 import {
@@ -280,8 +279,6 @@ export default function HomePage() {
           </Reveal>
         </div>
       </section>
-
-      <StickyMobileCta label="Explore Meal Plans" href="/plans" />
     </>
   );
 }
