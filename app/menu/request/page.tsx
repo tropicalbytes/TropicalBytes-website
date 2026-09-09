@@ -127,6 +127,13 @@ function RequestForm() {
     });
 
     setValues((v) => ({ ...v, selectedMeals: ids }));
+    if (errors.selectedItems) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.selectedItems;
+        return next;
+      });
+    }
   };
 
   const handleAddOnsChange = (ids: string[]) => {
@@ -146,7 +153,34 @@ function RequestForm() {
     });
 
     setValues((v) => ({ ...v, selectedAddOns: ids }));
+    if (errors.selectedItems) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.selectedItems;
+        return next;
+      });
+    }
   };
+
+  // Quantities per category
+  const vegQuantity = useMemo(() => {
+    return values.selectedMeals
+      .filter((id) => id.startsWith("veg-"))
+      .reduce((sum, id) => sum + (itemQuantities[id] || 0), 0);
+  }, [values.selectedMeals, itemQuantities]);
+
+  const nonVegQuantity = useMemo(() => {
+    return values.selectedMeals
+      .filter((id) => id.startsWith("non-veg-"))
+      .reduce((sum, id) => sum + (itemQuantities[id] || 0), 0);
+  }, [values.selectedMeals, itemQuantities]);
+
+  const dessertQuantity = useMemo(() => {
+    return values.selectedAddOns
+      .reduce((sum, id) => sum + (itemQuantities[id] || 0), 0);
+  }, [values.selectedAddOns, itemQuantities]);
+
+  const totalSelectedQuantity = vegQuantity + nonVegQuantity + dessertQuantity;
 
   // Derived live total price
   const totalPrice = useMemo(() => {
@@ -177,14 +211,35 @@ function RequestForm() {
       .filter(Boolean) as { id: string; label: string; price: number; quantity: number; subtotal: number }[];
   }, [values.selectedMeals, values.selectedAddOns, itemQuantities]);
 
+  const effectiveFoodPreference = useMemo(() => {
+    const hasVegMeal = vegQuantity > 0;
+    const hasNonVegMeal = nonVegQuantity > 0;
+    const hasDessert = dessertQuantity > 0;
+
+    if (hasVegMeal && hasNonVegMeal) {
+      return "Veg & Non-Veg";
+    }
+    if (hasVegMeal) {
+      return "Veg";
+    }
+    if (hasNonVegMeal) {
+      return "Non-Veg";
+    }
+    if (hasDessert) {
+      return "Desserts";
+    }
+    return values.foodPreference || "Veg";
+  }, [vegQuantity, nonVegQuantity, dessertQuantity, values.foodPreference]);
+
   const runValidation = () =>
     validate(
       {
         fullName: values.fullName,
         phone: values.phone,
         email: values.email,
-        foodPreference: values.foodPreference,
+        foodPreference: effectiveFoodPreference,
         location: values.location,
+        selectedItems: totalSelectedQuantity > 0 ? "valid" : "",
       },
       {
         fullName: [isRequired, maxLength(MAX_LENGTHS.name)],
@@ -192,6 +247,7 @@ function RequestForm() {
         email: [isRequired, isValidEmail],
         foodPreference: [isRequired],
         location: [isRequired],
+        selectedItems: [isRequired],
       },
       {
         fullName: "Please enter your full name.",
@@ -199,6 +255,7 @@ function RequestForm() {
         email: "Enter a valid email address.",
         foodPreference: "Please choose vegetarian or non-vegetarian.",
         location: "Please enter your delivery location.",
+        selectedItems: "Please select at least one meal or dessert.",
       }
     );
 
@@ -214,22 +271,28 @@ function RequestForm() {
     setStatus("submitting");
     setErrorMessage("");
 
-    const hasVegMeal = values.selectedMeals.some((id) => id.startsWith("veg-"));
-    const hasNonVegMeal = values.selectedMeals.some((id) => id.startsWith("non-veg-"));
-    const hasDessert = values.selectedAddOns.length > 0;
+    const activeMealIds = values.selectedMeals.filter((id) => (itemQuantities[id] || 0) > 0);
+    const activeAddOnIds = values.selectedAddOns.filter((id) => (itemQuantities[id] || 0) > 0);
 
-    let effectiveFoodPreference = "Veg";
-    if (hasVegMeal && hasNonVegMeal) {
-      effectiveFoodPreference = "Veg & Non-Veg";
-    } else if (hasVegMeal) {
-      effectiveFoodPreference = "Veg";
-    } else if (hasNonVegMeal) {
-      effectiveFoodPreference = "Non-Veg";
-    } else if (hasDessert) {
-      effectiveFoodPreference = "Desserts";
-    } else if (values.foodPreference) {
-      effectiveFoodPreference = values.foodPreference;
-    }
+    const hasVegMeal = vegQuantity > 0;
+    const hasNonVegMeal = nonVegQuantity > 0;
+    const hasDessert = dessertQuantity > 0;
+
+    const isDessertOnly = !hasVegMeal && !hasNonVegMeal && hasDessert;
+
+    const mealLabels = activeMealIds.map((id) => {
+      const label = getIndividualItemLabel(id);
+      const qty = itemQuantities[id] || 1;
+      return `${label} × ${qty}`;
+    });
+    const dessertLabels = activeAddOnIds.map((id) => {
+      const label = getIndividualItemLabel(id);
+      const qty = itemQuantities[id] || 1;
+      return `${label} × ${qty}`;
+    });
+
+    const clientSelectedMeals = isDessertOnly ? dessertLabels.join(", ") : mealLabels.join(", ");
+    const clientAddOns = isDessertOnly ? "" : dessertLabels.join(", ");
 
     const result = await submitToGoogleSheets({
       requestType: REQUEST_TYPES.INDIVIDUAL_MEAL,
@@ -239,9 +302,11 @@ function RequestForm() {
       phone: values.phone,
       email: values.email,
       foodPreference: effectiveFoodPreference,
-      selectedMealIds: values.selectedMeals,
+      selectedMealIds: activeMealIds,
       deliveryLocation: values.location,
-      selectedAddOnIds: values.selectedAddOns,
+      selectedAddOnIds: activeAddOnIds,
+      selectedMeals: clientSelectedMeals,
+      addOns: clientAddOns,
       itemQuantities: itemQuantities,
       clientEstimatedTotal: formatINR(totalPrice),
       notes: values.notes,
@@ -328,19 +393,10 @@ function RequestForm() {
                     helperText="Desserts can be added to any order, Veg or Non-Veg."
                   />
                 )}
-
-                {category !== "desserts" && (
-                  <MultiSelectCombobox
-                    label="Add Desserts (optional)"
-                    placeholder="Search desserts..."
-                    groups={addOnGroups}
-                    selected={values.selectedAddOns}
-                    onChange={handleAddOnsChange}
-                    showQuantities={true}
-                    quantities={itemQuantities}
-                    onIncrease={handleIncrease}
-                    onDecrease={handleDecrease}
-                  />
+                {errors.selectedItems && (
+                  <span className="mt-1.5 block text-xs font-medium text-danger">
+                    {errors.selectedItems}
+                  </span>
                 )}
               </div>
             </div>

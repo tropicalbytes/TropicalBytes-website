@@ -358,24 +358,42 @@ function validateAndNormalize(requestType, raw) {
     check(isValidItemQuantitiesObject(raw.itemQuantities), "itemQuantities");
 
     const itemQuantities = (raw.itemQuantities && typeof raw.itemQuantities === "object") ? raw.itemQuantities : null;
-    const meals = validateIdArray(raw.selectedMealIds, GENERATED_ALLOWLIST.MEAL_IDS, MAX_SELECTED_ITEMS, itemQuantities);
+    const allowedMealsMap = Object.assign({}, GENERATED_ALLOWLIST.MEAL_IDS, GENERATED_ALLOWLIST.ADDON_IDS);
+    const meals = validateIdArray(raw.selectedMealIds, allowedMealsMap, MAX_SELECTED_ITEMS, itemQuantities);
     check(meals.ok, "selectedMealIds");
     const addOns = validateIdArray(raw.selectedAddOnIds, GENERATED_ALLOWLIST.ADDON_IDS, MAX_SELECTED_ITEMS, itemQuantities);
     check(addOns.ok, "selectedAddOnIds");
+
+    // Require at least one item overall across Veg, Non-Veg, and Desserts
+    check(meals.labels.length > 0 || addOns.labels.length > 0, "selectedMealIds");
 
     if (errors.length > 0) return { ok: false, errors: errors };
 
     // Authoritative classification based on actual selected items
     let hasVeg = false;
     let hasNonVeg = false;
+    const mealLabels = [];
+    const dessertInMealLabels = [];
+
     if (isArray(raw.selectedMealIds)) {
       for (let i = 0; i < raw.selectedMealIds.length; i++) {
         const id = String(raw.selectedMealIds[i] || "").toLowerCase();
         if (id.indexOf("veg-") === 0) hasVeg = true;
         if (id.indexOf("non-veg-") === 0) hasNonVeg = true;
+        if (id.indexOf("dessert-") === 0) {
+          dessertInMealLabels.push(meals.labels[i]);
+        } else {
+          mealLabels.push(meals.labels[i]);
+        }
+      }
+    } else {
+      for (let i = 0; i < meals.labels.length; i++) {
+        mealLabels.push(meals.labels[i]);
       }
     }
-    const hasDesserts = isArray(raw.selectedAddOnIds) && raw.selectedAddOnIds.length > 0;
+
+    const allDessertLabels = addOns.labels.concat(dessertInMealLabels);
+    const hasDesserts = allDessertLabels.length > 0;
 
     let computedFoodPreference;
     let finalSelectedMeals;
@@ -384,27 +402,27 @@ function validateAndNormalize(requestType, raw) {
     if (hasVeg && hasNonVeg) {
       // Case A: Veg + Non-Veg
       computedFoodPreference = "Veg & Non-Veg";
-      finalSelectedMeals = meals.labels.join(", ");
-      finalAddOns = addOns.labels.join(", ");
+      finalSelectedMeals = mealLabels.join(", ");
+      finalAddOns = allDessertLabels.join(", ");
     } else if (hasVeg) {
       // Case B: Veg only
       computedFoodPreference = "Veg";
-      finalSelectedMeals = meals.labels.join(", ");
-      finalAddOns = addOns.labels.join(", ");
+      finalSelectedMeals = mealLabels.join(", ");
+      finalAddOns = allDessertLabels.join(", ");
     } else if (hasNonVeg) {
       // Case C: Non-Veg only
       computedFoodPreference = "Non-Veg";
-      finalSelectedMeals = meals.labels.join(", ");
-      finalAddOns = addOns.labels.join(", ");
+      finalSelectedMeals = mealLabels.join(", ");
+      finalAddOns = allDessertLabels.join(", ");
     } else if (hasDesserts) {
       // Case D: Desserts only -> Desserts placed under Selected Meals, Add-ons is blank
       computedFoodPreference = "Desserts";
-      finalSelectedMeals = addOns.labels.join(", ");
+      finalSelectedMeals = allDessertLabels.join(", ");
       finalAddOns = "";
     } else {
       computedFoodPreference = isNonEmptyString(foodPreference) ? foodPreference : "Veg";
-      finalSelectedMeals = meals.labels.join(", ");
-      finalAddOns = addOns.labels.join(", ");
+      finalSelectedMeals = mealLabels.join(", ");
+      finalAddOns = allDessertLabels.join(", ");
     }
 
     return {
