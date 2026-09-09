@@ -15,7 +15,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   return routes.map((route) => ({
-    url: `https://mealshome.in${route}`,
-    lastModified: new Date(),
+    url: `https://tropicalbytes.in${route}`,
   }));
 }

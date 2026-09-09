@@ -20,7 +20,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://mealshome.in"),
+  metadataBase: new URL("https://tropicalbytes.in"),
   title: {
     default: `${business.name} - Good food, made simple.`,
     template: `%s - ${business.name}`,

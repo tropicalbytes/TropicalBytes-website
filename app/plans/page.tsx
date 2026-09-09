@@ -3,7 +3,6 @@ import PlanCard from "@/components/PlanCard";
 import PageHero from "@/components/PageHero";
 import { LinkButton } from "@/components/Button";
 import Reveal from "@/components/Reveal";
-import StickyMobileCta from "@/components/StickyMobileCta";
 import { Bell } from "lucide-react";
 import { subscriptionTiers, business } from "@/lib/config";
 
@@ -63,7 +62,6 @@ export default function PlansPage() {
         </Reveal>
       </section>
 
-      <StickyMobileCta label="Start Your Subscription" href="/plans/subscribe" />
     </>
   );
 }
