@@ -145,7 +145,7 @@ export default function PartyRequestPage() {
       // allowlist and never trusts free-text labels from the browser.
       selectedItemIds: selectedItems,
       itemQuantities: itemQuantities,
-      clientEstimatedTotal: totalPrice > 0 ? formatINR(totalPrice) : undefined,
+      estimatedTotal: formatINR(totalPrice),
       eventDate: values.eventDate,
       deliveryLocation: values.location,
       notes: values.notes,

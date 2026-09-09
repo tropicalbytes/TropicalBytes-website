@@ -308,7 +308,7 @@ function RequestForm() {
       selectedMeals: clientSelectedMeals,
       addOns: clientAddOns,
       itemQuantities: itemQuantities,
-      clientEstimatedTotal: formatINR(totalPrice),
+      estimatedTotal: formatINR(totalPrice),
       notes: values.notes,
     });
 

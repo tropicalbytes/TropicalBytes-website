@@ -188,7 +188,6 @@ function SubscribeForm() {
       mealPreference: values.mealPreference,
       foodPreference: values.foodPreference,
       startDate: values.startDate,
-      clientEstimatedTotal: selectedPlanOption ? selectedPlanOption.totalPrice : null,
       address: values.address,
       area: values.area,
       city: values.city,

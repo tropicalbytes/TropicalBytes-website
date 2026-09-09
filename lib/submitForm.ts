@@ -14,8 +14,7 @@ const GENERIC_ERROR =
  * boundary — anything in `payload` is advisory only. The Apps Script backend
  * re-validates every field, ignores/overwrites client-supplied `status`,
  * generates its own authoritative `enquiryId` and timestamp, and recomputes
- * price from its own allowlisted configuration rather than trusting
- * `clientEstimatedTotal`. Never add a field here and assume the backend
+ * price from its own allowlisted configuration. Never add a field here and assume the backend
  * will treat it as authoritative without also updating Code.gs.
  *
  * Uses a plain (non-preflighted) POST with a text/plain body so it works

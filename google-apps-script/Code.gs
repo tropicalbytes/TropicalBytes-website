@@ -61,17 +61,17 @@ const HEADERS = {
   "Subscription Requests": [
     "Enquiry ID", "Submission Date", "Request Type", "Customer Name", "Phone Number", "Email",
     "Selected Plan", "Duration", "Meal Preference", "Food Preference",
-    "Preferred Start Date", "Estimated Total (Server)", "Client Estimated Total",
+    "Preferred Start Date", "Estimated Total (Server)",
     "Full Address", "Area", "City", "Pincode", "Additional Notes",
   ],
   "Individual Meal Requests": [
     "Enquiry ID", "Submission Date", "Request Type", "Customer Name", "Phone Number", "Email",
     "Food Preference", "Selected Meals",
-    "Delivery Location", "Add-ons", "Additional Notes",
+    "Delivery Location", "Add-ons", "Estimated Total (Server)", "Additional Notes",
   ],
   "Party Bulk Orders": [
     "Enquiry ID", "Submission Date", "Request Type", "Customer Name", "Phone Number", "Email",
-    "Selected Items", "Event Date", "Delivery Location", "Additional Notes",
+    "Selected Items", "Estimated Total (Server)", "Event Date", "Delivery Location", "Additional Notes",
   ],
   "Contact Enquiries": [
     "Enquiry ID", "Submission Date", "Request Type", "Customer Name", "Phone Number", "Email",
@@ -338,7 +338,6 @@ function validateAndNormalize(requestType, raw) {
         foodPreference: foodPreference,
         startDate: startDate,
         estimatedTotal: "\u20B9" + plan.totalPrice.toLocaleString("en-IN"), // authoritative, server-side plan price
-        clientEstimatedTotal: sanitizeForDisplay(raw.clientEstimatedTotal),
         address: raw.address.trim(),
         area: raw.area.trim(),
         city: raw.city.trim(),
@@ -432,7 +431,7 @@ function validateAndNormalize(requestType, raw) {
         selectedMeals: finalSelectedMeals,
         deliveryLocation: raw.deliveryLocation.trim(),
         addOns: finalAddOns,
-        clientEstimatedTotal: sanitizeForDisplay(raw.clientEstimatedTotal),
+        estimatedTotal: sanitizeForDisplay(raw.estimatedTotal),
         notes: raw.notes ? String(raw.notes).trim() : "",
       }),
     };
@@ -457,9 +456,9 @@ function validateAndNormalize(requestType, raw) {
       ok: true,
       data: Object.assign({}, base, {
         selectedItems: items.labels.join(", "),
+        estimatedTotal: sanitizeForDisplay(raw.estimatedTotal),
         eventDate: eventDate,
         deliveryLocation: raw.deliveryLocation.trim(),
-        clientEstimatedTotal: sanitizeForDisplay(raw.clientEstimatedTotal),
         notes: raw.notes ? String(raw.notes).trim() : "",
       }),
     };
@@ -623,19 +622,19 @@ function appendRow(sheet, sheetName, data) {
     row = [
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
       safeCell(data.selectedPlan), safeCell(data.duration), safeCell(data.mealPreference), safeCell(data.foodPreference),
-      safeCell(data.startDate), safeCell(data.estimatedTotal), safeCell(data.clientEstimatedTotal),
+      safeCell(data.startDate), safeCell(data.estimatedTotal),
       safeCell(data.address), safeCell(data.area), safeCell(data.city), safeCell(data.pincode), safeCell(data.notes),
     ];
   } else if (sheetName === "Individual Meal Requests") {
     row = [
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
       safeCell(data.foodPreference), safeCell(data.selectedMeals),
-      safeCell(data.deliveryLocation), safeCell(data.addOns), safeCell(data.notes),
+      safeCell(data.deliveryLocation), safeCell(data.addOns), safeCell(data.estimatedTotal), safeCell(data.notes),
     ];
   } else if (sheetName === "Party Bulk Orders") {
     row = [
       safeCell(data.enquiryId), submittedAt, safeCell(data.requestType), safeCell(data.fullName), safeCell(data.phone), safeCell(data.email),
-      safeCell(data.selectedItems), safeCell(data.eventDate), safeCell(data.deliveryLocation),
+      safeCell(data.selectedItems), safeCell(data.estimatedTotal), safeCell(data.eventDate), safeCell(data.deliveryLocation),
       safeCell(data.notes),
     ];
   } else {
@@ -652,17 +651,93 @@ function appendRow(sheet, sheetName, data) {
 // EMAIL
 // ============================================================================
 
+function getSubmissionFieldList(requestType, data) {
+  const timeZone = Session.getScriptTimeZone() || "Asia/Kolkata";
+  const formattedDate = data.submittedAt instanceof Date
+    ? Utilities.formatDate(data.submittedAt, timeZone, "dd-MM-yyyy HH:mm:ss")
+    : String(data.submittedAt || "");
+
+  if (requestType === REQUEST_TYPES.SUBSCRIPTION) {
+    return [
+      ["Enquiry ID", data.enquiryId],
+      ["Submission Date", formattedDate],
+      ["Request Type", data.requestType],
+      ["Customer Name", data.fullName],
+      ["Phone Number", data.phone],
+      ["Email", data.email],
+      ["Selected Plan", data.selectedPlan],
+      ["Duration", data.duration],
+      ["Meal Preference", data.mealPreference],
+      ["Food Preference", data.foodPreference],
+      ["Preferred Start Date", data.startDate],
+      ["Estimated Total (Server)", data.estimatedTotal],
+      ["Full Address", data.address],
+      ["Area", data.area],
+      ["City", data.city],
+      ["Pincode", data.pincode],
+      ["Additional Notes", data.notes],
+    ];
+  }
+
+  if (requestType === REQUEST_TYPES.INDIVIDUAL_MEAL) {
+    return [
+      ["Enquiry ID", data.enquiryId],
+      ["Submission Date", formattedDate],
+      ["Request Type", data.requestType],
+      ["Customer Name", data.fullName],
+      ["Phone Number", data.phone],
+      ["Email", data.email],
+      ["Food Preference", data.foodPreference],
+      ["Selected Meals", data.selectedMeals],
+      ["Delivery Location", data.deliveryLocation],
+      ["Add-ons", data.addOns],
+      ["Estimated Total (Server)", data.estimatedTotal],
+      ["Additional Notes", data.notes],
+    ];
+  }
+
+  if (requestType === REQUEST_TYPES.PARTY_BULK) {
+    return [
+      ["Enquiry ID", data.enquiryId],
+      ["Submission Date", formattedDate],
+      ["Request Type", data.requestType],
+      ["Customer Name", data.fullName],
+      ["Phone Number", data.phone],
+      ["Email", data.email],
+      ["Selected Items", data.selectedItems],
+      ["Estimated Total (Server)", data.estimatedTotal],
+      ["Event Date", data.eventDate],
+      ["Delivery Location", data.deliveryLocation],
+      ["Additional Notes", data.notes],
+    ];
+  }
+
+  return [
+    ["Enquiry ID", data.enquiryId],
+    ["Submission Date", formattedDate],
+    ["Request Type", data.requestType],
+    ["Customer Name", data.fullName],
+    ["Phone Number", data.phone],
+    ["Email", data.email],
+    ["Message", data.message],
+  ];
+}
+
 function sendNotificationEmail(requestType, data) {
   const subject = "New " + requestType + " - TropicalBytes (" + data.enquiryId + ")";
-  const keys = Object.keys(data).filter(function (k) { return k !== "honeypot"; });
-  const rows = keys
-    .map(function (key) {
-      return "<tr><td style=\"padding:4px 10px;font-weight:600;\">" + escapeHtml(key) + "</td><td style=\"padding:4px 10px;\">" + escapeHtml(String(data[key] === undefined ? "" : data[key])) + "</td></tr>";
+  const fieldList = getSubmissionFieldList(requestType, data);
+  const rows = fieldList
+    .map(function (item) {
+      return "<tr><td style=\"padding:6px 12px;font-weight:600;border-bottom:1px solid #eee;color:#1F3A2E;\">" +
+        escapeHtml(item[0]) +
+        "</td><td style=\"padding:6px 12px;border-bottom:1px solid #eee;\">" +
+        escapeHtml(String(item[1] === undefined || item[1] === null ? "" : item[1])) +
+        "</td></tr>";
     })
     .join("");
 
   const html =
-    "<div style=\"font-family:sans-serif;\"><h2 style=\"color:#1F3A2E;\">" + escapeHtml(requestType) + "</h2><table style=\"border-collapse:collapse;\">" + rows + "</table></div>";
+    "<div style=\"font-family:sans-serif;\"><h2 style=\"color:#1F3A2E;\">" + escapeHtml(requestType) + "</h2><table style=\"border-collapse:collapse;width:100%;max-width:600px;\">" + rows + "</table></div>";
 
   MailApp.sendEmail({ to: BUSINESS_EMAIL, subject: subject, htmlBody: html });
 }

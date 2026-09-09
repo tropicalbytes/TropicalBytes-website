@@ -8,8 +8,7 @@
  * submitted subscription plan option id, and every selected
  * meal/add-on/party-item id, against these maps rather than trusting
  * anything the browser sends. SUBSCRIPTION_PLANS.totalPrice is the
- * server-side source of truth for subscription pricing — the frontend's
- * clientEstimatedTotal is advisory only.
+ * server-side source of truth for subscription pricing.
  */
 
 var GENERATED_ALLOWLIST = {
