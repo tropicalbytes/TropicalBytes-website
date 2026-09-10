@@ -267,7 +267,7 @@ export default function HomePage() {
               across {business.serviceAreas.slice(0, 2).join(" & ")}.
             </p>
             <div className="mt-7 flex flex-wrap gap-4">
-              <LinkButton href="/plans" withArrow className="!bg-forest hover:!bg-forest-dark">
+              <LinkButton href="/#our-plans" withArrow className="!bg-forest hover:!bg-forest-dark">
                 Get Started Now
               </LinkButton>
               <LinkButton href={`tel:${business.phone.replace(/\s/g, "")}`} variant="secondary" className="!border-ink !text-ink hover:!bg-ink hover:!text-yellow">
