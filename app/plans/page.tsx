@@ -7,8 +7,12 @@ import { Bell } from "lucide-react";
 import { subscriptionTiers, business } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: "Subscription Meal Plans",
-  description: `3 Day Trial, Weekly, Monthly, and Salad subscription meal plans from ${business.name}.`,
+  title: { absolute: "Subscription Meal Plans - TropicalBytes" },
+  description:
+    "Explore flexible subscription meal plans in Udupi & Manipal: 3-Day Trial, Weekly, Monthly, and Salad plans. Veg and non-veg options with daily delivery.",
+  alternates: {
+    canonical: "https://tropicalbytes.in/plans",
+  },
 };
 
 export default function PlansPage() {

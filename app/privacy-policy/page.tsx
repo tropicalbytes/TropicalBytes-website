@@ -4,8 +4,11 @@ import LegalSection from "@/components/LegalSection";
 import { business } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
+  title: { absolute: "Privacy Policy - TropicalBytes" },
   description: `How ${business.name} collects, uses, and protects the information submitted through our website.`,
+  alternates: {
+    canonical: "https://tropicalbytes.in/privacy-policy",
+  },
 };
 
 const EFFECTIVE_DATE = "August 25, 2026";

@@ -22,10 +22,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://tropicalbytes.in"),
   title: {
-    default: `${business.name} - Good food, made simple.`,
+    default: "TropicalBytes - Fresh Meal Subscriptions & Delivery in Udupi",
     template: `%s - ${business.name}`,
   },
   description: business.description,
+  alternates: {
+    canonical: "https://tropicalbytes.in",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -40,19 +43,72 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: `${business.name} - Good food, made simple.`,
+    title: "TropicalBytes - Fresh Meal Subscriptions & Delivery in Udupi",
     description: business.description,
+    url: "https://tropicalbytes.in",
     siteName: business.name,
     locale: "en_IN",
     type: "website",
+    images: [
+      {
+        url: "/brand/hero-reference.png",
+        width: 1200,
+        height: 800,
+        alt: "TropicalBytes - Fresh Meal Subscriptions in Udupi",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TropicalBytes - Fresh Meal Subscriptions & Delivery in Udupi",
+    description: business.description,
+    images: ["/brand/hero-reference.png"],
   },
   robots: { index: true, follow: true },
+};
+
+const localBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": "FoodEstablishment",
+  name: business.name,
+  description: business.description,
+  url: "https://tropicalbytes.in",
+  telephone: business.phone,
+  email: business.email,
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Court Road",
+    addressLocality: "Udupi",
+    addressRegion: "Karnataka",
+    postalCode: "576101",
+    addressCountry: "IN",
+  },
+  areaServed: business.serviceAreas.map((area) => ({
+    "@type": "City",
+    name: area,
+  })),
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      opens: "09:00",
+      closes: "19:00",
+    },
+  ],
+  sameAs: [business.social.instagram],
+  image: "https://tropicalbytes.in/brand/hero-reference.png",
+  logo: "https://tropicalbytes.in/brand/tropicalbytes-logo.png",
+  priceRange: "₹₹",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${manrope.variable} ${inter.variable}`}>
       <body className="font-body antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+        />
         <Navbar />
         <main>{children}</main>
         <Footer />

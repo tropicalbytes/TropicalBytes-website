@@ -4,13 +4,33 @@ import Reveal from "@/components/Reveal";
 import { faqs, business } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: "FAQ",
-  description: `Answers to common questions about ${business.name} meal plans, pricing, and delivery.`,
+  title: { absolute: "Frequently Asked Questions - TropicalBytes" },
+  description: `Answers to common questions about ${business.name} meal plans, pricing, and delivery in Udupi & Manipal.`,
+  alternates: {
+    canonical: "https://tropicalbytes.in/faq",
+  },
 };
 
 export default function FaqPage() {
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
+
   return (
     <section className="mx-auto max-w-content px-5 py-16 md:px-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <Reveal>
         <p className="text-xs font-semibold uppercase tracking-widest text-copper">FAQ</p>
         <h1 className="mt-3 font-display text-4xl font-semibold text-forest">Frequently asked questions</h1>

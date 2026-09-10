@@ -4,8 +4,11 @@ import LegalSection from "@/components/LegalSection";
 import { business } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: "Terms of Service",
+  title: { absolute: "Terms of Service - TropicalBytes" },
   description: `The terms that apply to meal plan, individual meal, and party/bulk requests submitted through the ${business.name} website.`,
+  alternates: {
+    canonical: "https://tropicalbytes.in/terms-of-service",
+  },
 };
 
 const EFFECTIVE_DATE = "August 25, 2026";

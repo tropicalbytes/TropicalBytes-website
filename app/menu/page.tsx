@@ -7,8 +7,12 @@ import { LinkButton } from "@/components/Button";
 import { business, individualMenu, formatINR, MenuItem } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: "Menu",
-  description: `Browse the full ${business.name} menu: Veg Meals, Non-Veg Meals, and Desserts.`,
+  title: { absolute: "Subscription Menu - TropicalBytes" },
+  description:
+    "Browse the complete TropicalBytes subscription menu: wholesome vegetarian and non-vegetarian meals, fresh salads, combos, and desserts in Udupi.",
+  alternates: {
+    canonical: "https://tropicalbytes.in/menu",
+  },
 };
 
 // Desserts are their own category (brown indicator) regardless of a given

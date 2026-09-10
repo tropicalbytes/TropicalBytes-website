@@ -1,7 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { LinkButton } from "@/components/Button";
 import Reveal from "@/components/Reveal";
+
+export const metadata: Metadata = {
+  title: { absolute: "TropicalBytes - Fresh Meal Subscriptions & Delivery in Udupi" },
+  description:
+    "Chef-prepared, home-style meal subscriptions and fresh food delivery in Udupi and Manipal. Flexible 3-day trial, weekly, monthly, and salad plans delivered daily.",
+  alternates: {
+    canonical: "https://tropicalbytes.in",
+  },
+};
 import DeliveryScooter from "@/components/icons/DeliveryScooter";
 import { business } from "@/lib/config";
 import {
