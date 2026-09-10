@@ -424,6 +424,36 @@ function validateAndNormalize(requestType, raw) {
       finalAddOns = allDessertLabels.join(", ");
     }
 
+    // Authoritative, server-side individual meal total calculation
+    const itemPrices = GENERATED_ALLOWLIST.INDIVIDUAL_ITEM_PRICES || {};
+    let serverTotal = 0;
+    const countedIds = {};
+
+    const processItemPrice = function (id) {
+      if (!id || countedIds[id]) return;
+      countedIds[id] = true;
+      const unitPrice = Number(itemPrices[id]) || 0;
+      let qty = 1;
+      if (itemQuantities && typeof itemQuantities === "object" && Object.prototype.hasOwnProperty.call(itemQuantities, id)) {
+        const q = Number(itemQuantities[id]);
+        if (Number.isFinite(q) && Number.isInteger(q) && q >= 1 && q <= MAX_QUANTITY) {
+          qty = q;
+        }
+      }
+      serverTotal += unitPrice * qty;
+    };
+
+    if (isArray(raw.selectedMealIds)) {
+      for (let i = 0; i < raw.selectedMealIds.length; i++) {
+        processItemPrice(raw.selectedMealIds[i]);
+      }
+    }
+    if (isArray(raw.selectedAddOnIds)) {
+      for (let i = 0; i < raw.selectedAddOnIds.length; i++) {
+        processItemPrice(raw.selectedAddOnIds[i]);
+      }
+    }
+
     return {
       ok: true,
       data: Object.assign({}, base, {
@@ -431,7 +461,7 @@ function validateAndNormalize(requestType, raw) {
         selectedMeals: finalSelectedMeals,
         deliveryLocation: raw.deliveryLocation.trim(),
         addOns: finalAddOns,
-        estimatedTotal: sanitizeForDisplay(raw.estimatedTotal),
+        estimatedTotal: "\u20B9" + serverTotal.toLocaleString("en-IN"), // authoritative, server-side individual meal total
         notes: raw.notes ? String(raw.notes).trim() : "",
       }),
     };

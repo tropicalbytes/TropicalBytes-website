@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import PageHero from "@/components/PageHero";
 import MultiSelectCombobox from "@/components/MultiSelectCombobox";
-import { business, FoodType, buildMealOptionGroups, buildAddOnOptionGroups, formatINR, getIndividualItemPrice, getIndividualItemLabel } from "@/lib/config";
+import { business, buildMealOptionGroups, buildAddOnOptionGroups, formatINR, getIndividualItemPrice, getIndividualItemLabel } from "@/lib/config";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
 import { isRequired, isValidEmail, isValidPhone, maxLength, validate } from "@/lib/validation";
 import { REQUEST_TYPES, MAX_LENGTHS } from "@/lib/constants";

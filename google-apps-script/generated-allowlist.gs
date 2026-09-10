@@ -7,8 +7,8 @@
  * This is the backend's authoritative allowlist: Code.gs validates every
  * submitted subscription plan option id, and every selected
  * meal/add-on/party-item id, against these maps rather than trusting
- * anything the browser sends. SUBSCRIPTION_PLANS.totalPrice is the
- * server-side source of truth for subscription pricing.
+ * anything the browser sends. SUBSCRIPTION_PLANS.totalPrice and
+ * INDIVIDUAL_ITEM_PRICES are the server-side sources of truth for pricing.
  */
 
 var GENERATED_ALLOWLIST = {
@@ -143,6 +143,50 @@ var GENERATED_ALLOWLIST = {
     "deliveryLabel": "2 time delivery. 6 days",
     "label": "Salad Plan - 2 Meal (Non-Veg)"
   }
+},
+  INDIVIDUAL_ITEM_PRICES: {
+  "veg-alfredo-penne-pasta-veg": 300,
+  "veg-cilantro-penne-pasta-veg": 300,
+  "veg-basil-penne-pasta-veg": 300,
+  "veg-chilli-paneer-with-rice-combo": 300,
+  "veg-chilli-paneer-with-noodles-combo": 300,
+  "veg-chilli-mushroom-with-rice-combo": 280,
+  "veg-chilli-mushroom-with-noodles-combo": 280,
+  "veg-grilled-paneer-salad": 275,
+  "veg-caesar-salad-veg": 275,
+  "veg-asian-salad-veg": 275,
+  "veg-tropical-salad-veg": 275,
+  "veg-bbq-salad-veg": 275,
+  "veg-paneer-tikka-with-ghee-rice": 300,
+  "veg-thai-green-curry-with-rice-veg": 300,
+  "veg-paneer-butter-masala-with-roti": 300,
+  "veg-veg-biriyani": 250,
+  "veg-stroganoff-paneer-with-rice": 300,
+  "veg-veg-kurma-with-roti": 275,
+  "non-veg-alfredo-penne-pasta-chicken": 325,
+  "non-veg-cilantro-penne-pasta-chicken": 325,
+  "non-veg-basil-penne-pasta-chicken": 325,
+  "non-veg-chilli-chicken-with-rice-combo": 325,
+  "non-veg-chilli-chicken-with-noodles-combo": 325,
+  "non-veg-asian-salad-chicken": 300,
+  "non-veg-tropical-chicken-salad": 280,
+  "non-veg-grilled-chicken-salad": 300,
+  "non-veg-caesar-salad-chicken": 300,
+  "non-veg-bbq-chicken-salad": 300,
+  "non-veg-tandoori-chicken-salad": 325,
+  "non-veg-chicken-kebab-with-ghee-rice": 325,
+  "non-veg-butter-chicken-with-roti": 325,
+  "non-veg-stroganoff-chicken-with-rice": 325,
+  "non-veg-thai-green-curry-chicken-with-rice": 325,
+  "non-veg-chicken-kurma-with-roti": 325,
+  "non-veg-chicken-65-with-rice": 325,
+  "non-veg-chicken-biriyani": 300,
+  "dessert-san-sebastian-cheese-cake": 350,
+  "dessert-tiramisu": 300,
+  "dessert-brownie-with-chocolate-sauce-nuts": 250,
+  "dessert-tropical-gudbad": 300,
+  "dessert-arabian-gudbad": 300,
+  "dessert-death-by-chocolate": 300
 },
   MEAL_IDS: {
   "veg-alfredo-penne-pasta-veg": "Alfredo Penne Pasta Veg",

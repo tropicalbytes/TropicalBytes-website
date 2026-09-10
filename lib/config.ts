@@ -31,9 +31,7 @@ export const business = {
 };
 
 // Primary navigation — the four commercial areas plus Home, Menu, and
-// Contact. How It Works is no longer a standalone page/nav item — it
-// lives only as a homepage section (see id="how-it-works" on Home).
-// About remains live (kept per instruction) but sits in the footer.
+// Contact. How It Works is a homepage section (see id="how-it-works" on Home).
 export const nav = [
   { label: "Home", href: "/" },
   { label: "Subscription Plans", href: "/plans" },
@@ -42,14 +40,6 @@ export const nav = [
   { label: "Subscription Menu", href: "/menu" },
   { label: "Contact", href: "/contact" },
 ];
-
-export const secondaryNav: { label: string; href: string }[] = [];
-
-// Decorative placeholder imagery for the homepage hero and About page banner.
-export const placeholderImages = {
-  homeHero: "https://images.pexels.com/photos/18601877/pexels-photo-18601877.jpeg?auto=compress&cs=tinysrgb&w=1000&h=1150&fit=crop",
-  aboutBanner: "https://images.pexels.com/photos/5677717/pexels-photo-5677717.jpeg?auto=compress&cs=tinysrgb&w=1600&h=700&fit=crop",
-};
 
 export function slugify(input: string): string {
   return input
@@ -63,7 +53,6 @@ export function formatINR(n: number): string {
 }
 
 export type FoodType = "Veg" | "Non-Veg";
-export type MealTime = "Lunch" | "Dinner" | "Lunch & Dinner";
 
 // ----------------------------------------------------------------------------
 // SUBSCRIPTION MEAL PLANS — four fixed tiers, each with 4 priced options
@@ -404,10 +393,7 @@ export function getPartyItemDetails(id: string): { label: string; price: number 
   return undefined;
 }
 
-/** Look up party or bulk item label by item ID. */
-export function getPartyItemLabel(id: string): string {
-  return getPartyItemDetails(id)?.label || id;
-}
+
 
 // ----------------------------------------------------------------------------
 // SITE CONTENT
@@ -455,27 +441,6 @@ export const faqs = [
   },
 ];
 
-export const howItWorks = [
-  {
-    step: "01",
-    title: "Choose Your Plan",
-    description: "Pick a plan tier, Veg or Non-Veg, and 1 or 2 meals a day that suits your routine.",
-  },
-  {
-    step: "02",
-    title: "Tell Us What You Need",
-    description: "Choose your favourite dishes, quantity, add-ons, and delivery details.",
-  },
-  {
-    step: "03",
-    title: "Submit Your Request",
-    description: "Send your subscription or meal request through the website. No payment needed yet.",
-  },
-  {
-    step: "04",
-    title: "We Contact You",
-    description: "Our team reviews your request and contacts you to confirm the details.",
-  },
-];
+
 
 export const GAS_WEB_APP_URL = process.env.NEXT_PUBLIC_GAS_WEB_APP_URL || "";

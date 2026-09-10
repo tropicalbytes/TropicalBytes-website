@@ -48,6 +48,24 @@ function buildAddOnIdMap(): Record<string, string> {
   return map;
 }
 
+function buildIndividualItemPriceMap(): Record<string, number> {
+  const map: Record<string, number> = {};
+  const foodTypes = ["Veg", "Non-Veg"] as const;
+  for (const foodType of foodTypes) {
+    for (const group of buildMealOptionGroups(foodType)) {
+      for (const opt of group.options) {
+        map[opt.id] = opt.price ?? 0;
+      }
+    }
+  }
+  for (const group of buildAddOnOptionGroups()) {
+    for (const opt of group.options) {
+      map[opt.id] = opt.price ?? 0;
+    }
+  }
+  return map;
+}
+
 function buildPartyIdMap(): Record<string, string> {
   const map: Record<string, string> = {};
   partyBulkOrders.veg.forEach((item) => {
@@ -91,14 +109,15 @@ const output = `/**
  * This is the backend's authoritative allowlist: Code.gs validates every
  * submitted subscription plan option id, and every selected
  * meal/add-on/party-item id, against these maps rather than trusting
- * anything the browser sends. SUBSCRIPTION_PLANS.totalPrice is the
- * server-side source of truth for subscription pricing.
+ * anything the browser sends. SUBSCRIPTION_PLANS.totalPrice and
+ * INDIVIDUAL_ITEM_PRICES are the server-side sources of truth for pricing.
  */
 
 var GENERATED_ALLOWLIST = {
   MEAL_PREFERENCES: ${JSON.stringify(MEAL_PREFERENCE_OPTIONS)},
   FOOD_PREFERENCES: ${JSON.stringify(FOOD_PREFERENCE_OPTIONS)},
   SUBSCRIPTION_PLANS: ${JSON.stringify(planMap, null, 2)},
+  INDIVIDUAL_ITEM_PRICES: ${JSON.stringify(buildIndividualItemPriceMap(), null, 2)},
   MEAL_IDS: ${JSON.stringify(buildMealIdMap(), null, 2)},
   ADDON_IDS: ${JSON.stringify(buildAddOnIdMap(), null, 2)},
   PARTY_ITEM_IDS: ${JSON.stringify(buildPartyIdMap(), null, 2)}

@@ -16,7 +16,6 @@ export type RequestType = (typeof REQUEST_TYPES)[keyof typeof REQUEST_TYPES];
 
 export const MEAL_PREFERENCE_OPTIONS = ["Lunch", "Dinner", "Lunch & Dinner"] as const;
 export const FOOD_PREFERENCE_OPTIONS = ["Veg", "Non-Veg"] as const;
-export const QUANTITY_OPTIONS = ["1", "2", "3", "4", "5"] as const;
 
 // Business rule: how far in the future a start/event date may reasonably be
 // requested. Mirrored server-side in Code.gs — keep both in sync if changed.

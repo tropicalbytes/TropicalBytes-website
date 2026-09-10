@@ -78,10 +78,7 @@ export const isValidPhone = (value: string) => {
 
 export const isValidPincode = (value: string) => /^\d{6}$/.test(value.trim());
 
-export const isValidQuantity = (value: string) => {
-  const n = Number(value);
-  return Number.isInteger(n) && n >= 1;
-};
+
 
 /** Validates that a date string is formatted strictly as DD-MM-YYYY with exactly a 4-digit year and represents a real calendar date in the current/valid year window. */
 export const isValidDate = (value: string) => {
@@ -124,12 +121,7 @@ export const isWithinFutureWindow = (maxDays: number) => (value: string) => {
 
 export const maxLength = (max: number) => (value: string) => value.trim().length <= max;
 
-/** Optional-positive-number check — passes on empty (field is optional), fails on non-positive or non-numeric. */
-export const isEmptyOrPositiveNumber = (value: string) => {
-  if (!value.trim()) return true;
-  const n = Number(value);
-  return Number.isFinite(n) && n > 0;
-};
+
 
 export const validate = (
   values: Record<string, string>,

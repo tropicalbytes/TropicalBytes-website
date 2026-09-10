@@ -12,7 +12,7 @@ import SuccessScreen from "@/components/SuccessScreen";
 import ErrorMessage from "@/components/ErrorMessage";
 import { Button } from "@/components/Button";
 import { CardHeader, IconInput, IconTextarea, Field } from "@/components/FormKit";
-import { Users, Clock, Package, Leaf, FileText, User, Phone as PhoneIcon, Mail, Calendar, MapPin, MessageSquare, Receipt } from "lucide-react";
+import { Users, Clock, Package, Leaf, User, Phone as PhoneIcon, Mail, Calendar, MapPin, MessageSquare, Receipt } from "lucide-react";
 
 const partyGroups = buildPartyOptionGroups();
 
