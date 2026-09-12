@@ -26,7 +26,6 @@ export const business = {
   serviceAreas: ["Udupi", "Manipal"],
   hours: "Mon – Sat, 9:00 AM – 7:00 PM",
   social: {
-    instagram: "https://www.instagram.com/tropicalcaterers12_2026",
   },
 };
 
