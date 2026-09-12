@@ -23,10 +23,7 @@ export default function Footer() {
             {business.description}
           </p>
           <div className="mt-5 flex items-center gap-3">
-            <a
-              href={business.social.instagram}
-              target="_blank"
-              rel="noreferrer"
+            <span
               aria-label="Instagram"
               className="grid h-9 w-9 place-items-center rounded-full bg-cream/10 text-cream/80 transition-colors hover:bg-yellow hover:text-ink"
             >
@@ -35,7 +32,7 @@ export default function Footer() {
                 <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.7" />
                 <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" />
               </svg>
-            </a>
+            </span>
           </div>
         </div>
 
