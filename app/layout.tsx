@@ -65,6 +65,9 @@ export const metadata: Metadata = {
     images: ["/brand/hero-reference.png"],
   },
   robots: { index: true, follow: true },
+  verification: {
+    google: "8szJhX4oKEwcbdOBraTk_ldPQ7GRcP_IUJTePIvKtDM",
+  },
 };
 
 const localBusinessSchema = {
