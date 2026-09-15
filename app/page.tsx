@@ -7,7 +7,7 @@ import Reveal from "@/components/Reveal";
 export const metadata: Metadata = {
   title: { absolute: "TropicalBytes - Fresh Meal Subscriptions & Delivery in Udupi" },
   description:
-    "Chef-prepared, home-style meal subscriptions and fresh food delivery in Udupi and Manipal. Flexible 3-day trial, weekly, monthly, and salad plans delivered daily.",
+    "Chef-prepared meal subscriptions and fresh food delivery in Udupi and Manipal. Flexible 3-day trial, weekly, monthly, and salad plans delivered daily.",
   alternates: {
     canonical: "https://tropicalbytes.in",
   },
@@ -63,7 +63,7 @@ const lifestyleMealPlans = [
   {
     title: "Individual Meal",
     description:
-      "Fresh, wholesome single meals on your schedule with zero subscription commitments. Perfectly portioned, delicious home-style food on demand.",
+      "Fresh, wholesome single meals on your schedule with zero subscription commitments. Perfectly portioned, delicious chef-prepared food on demand.",
     href: "/menu/request",
     icon: ShoppingBag,
   },
@@ -85,7 +85,7 @@ export default function HomePage() {
           <div>
             <Reveal>
               <span className="inline-flex items-center gap-2 rounded-full bg-palegreen px-3.5 py-1.5 text-xs font-semibold text-forest">
-                <Leaf size={14} /> Home-style meal subscriptions
+                <Leaf size={14} /> Chef-prepared meal subscriptions
               </span>
             </Reveal>
             <Reveal delay={80}>
