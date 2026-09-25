@@ -76,7 +76,14 @@ function SubscribeForm() {
     return findPlanOption(values.tierId, values.foodPreference as FoodType, Number(values.mealCount) as 1 | 2);
   }, [values.tierId, values.foodPreference, values.mealCount]);
 
-  const update = (field: keyof FormState, value: string) => setValues((v) => ({ ...v, [field]: value }));
+  const update = (field: keyof FormState, value: string) =>
+    setValues((v) => {
+      const next = { ...v, [field]: value };
+      if (next.mealCount === "1" && next.mealPreference === "Lunch & Dinner") {
+        next.mealPreference = "Lunch";
+      }
+      return next;
+    });
 
   const stepRules: Record<number, { rules: Record<string, Array<(v: string) => boolean>>; messages: Record<string, string> }> = {
     0: {
@@ -282,7 +289,10 @@ function SubscribeForm() {
 
             <Field label="Meal Preference" error={errors.mealPreference}>
               <div className="flex flex-wrap gap-3">
-                {MEAL_PREFERENCE_OPTIONS.map((m) => (
+                {(values.mealCount === "1"
+                  ? MEAL_PREFERENCE_OPTIONS.filter((m) => m !== "Lunch & Dinner")
+                  : MEAL_PREFERENCE_OPTIONS
+                ).map((m) => (
                   <SelectPill key={m} label={m} selected={values.mealPreference === m} onSelect={() => update("mealPreference", m)} />
                 ))}
               </div>
