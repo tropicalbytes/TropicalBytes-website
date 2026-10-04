@@ -57,9 +57,9 @@ export type FoodType = "Veg" | "Non-Veg";
 // ----------------------------------------------------------------------------
 // SUBSCRIPTION MEAL PLANS — four fixed tiers, each with 4 priced options
 // (Veg/Non-Veg × 1 Meal/2 Meals). Prices are flat, client-approved figures
-// from the PDF, not derived from any per-meal formula — several tiers are
-// not internally "clean" math (e.g. Monthly 2-Meal-Veg is cheaper than
-// 1-Meal-Veg) and are preserved exactly as approved.
+// from the PDF. Every total equals days × meals × perMealPrice (Monthly Veg
+// 1-Meal/2-Meal were transposed in the original data; corrected per the
+// client, finalized 2026-10-04 — scripts/generate-seed-sql.ts checks this).
 // ----------------------------------------------------------------------------
 
 export interface SubscriptionTier {
@@ -98,8 +98,8 @@ export const subscriptionPlanOptions: SubscriptionPlanOption[] = [
   { id: "weekly-nonveg-1", tierId: "weekly", foodType: "Non-Veg", mealCount: 1, totalPrice: 1440, perMealPrice: 240, deliveryLabel: "1 time delivery. 6 days" },
   { id: "weekly-nonveg-2", tierId: "weekly", foodType: "Non-Veg", mealCount: 2, totalPrice: 2700, perMealPrice: 225, deliveryLabel: "2 time delivery. 6 days" },
   // Monthly Plan
-  { id: "monthly-veg-1", tierId: "monthly", foodType: "Veg", mealCount: 1, totalPrice: 4800, perMealPrice: 200, deliveryLabel: "1 time delivery. 24 days" },
-  { id: "monthly-veg-2", tierId: "monthly", foodType: "Veg", mealCount: 2, totalPrice: 4560, perMealPrice: 190, deliveryLabel: "2 time delivery. 24 days" },
+  { id: "monthly-veg-1", tierId: "monthly", foodType: "Veg", mealCount: 1, totalPrice: 4560, perMealPrice: 190, deliveryLabel: "1 time delivery. 24 days" },
+  { id: "monthly-veg-2", tierId: "monthly", foodType: "Veg", mealCount: 2, totalPrice: 9120, perMealPrice: 190, deliveryLabel: "2 time delivery. 24 days" },
   { id: "monthly-nonveg-1", tierId: "monthly", foodType: "Non-Veg", mealCount: 1, totalPrice: 5040, perMealPrice: 210, deliveryLabel: "1 time delivery. 24 days" },
   { id: "monthly-nonveg-2", tierId: "monthly", foodType: "Non-Veg", mealCount: 2, totalPrice: 9600, perMealPrice: 200, deliveryLabel: "2 time delivery. 24 days" },
   // Salad Plan

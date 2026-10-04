@@ -83,7 +83,7 @@ var GENERATED_ALLOWLIST = {
     "tierId": "monthly",
     "foodType": "Veg",
     "mealCount": 1,
-    "totalPrice": 4800,
+    "totalPrice": 4560,
     "deliveryLabel": "1 time delivery. 24 days",
     "label": "Monthly Plan - 1 Meal (Veg)"
   },
@@ -91,7 +91,7 @@ var GENERATED_ALLOWLIST = {
     "tierId": "monthly",
     "foodType": "Veg",
     "mealCount": 2,
-    "totalPrice": 4560,
+    "totalPrice": 9120,
     "deliveryLabel": "2 time delivery. 24 days",
     "label": "Monthly Plan - 2 Meal (Veg)"
   },
