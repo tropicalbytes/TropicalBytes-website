@@ -87,5 +87,5 @@ Responsive: admin usable at 375 px.
 ## 7. Deployment notes
 
 - Free Supabase projects pause after inactivity and have limited backups — check current terms. For a paying client, budget for Pro or add a keep-alive plus scheduled exports. Cached pages hide an outage until the owner tries to log in.
-- Env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server only, never `NEXT_PUBLIC_`), `GAS_WEB_APP_URL` (no longer public), `GAS_SHARED_SECRET`, `TURNSTILE_SECRET_KEY`.
+- Env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the `sb_publishable_…` key), `SUPABASE_SERVICE_ROLE_KEY` (server only, never `NEXT_PUBLIC_`), `GAS_WEB_APP_URL` (no longer public), `GAS_SHARED_SECRET`, `TURNSTILE_SECRET_KEY`.
 - Don't share zips containing `.env.local` (yours is gitignored and holds only the public Apps Script URL, but the habit matters).

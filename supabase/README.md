@@ -23,7 +23,11 @@ not exposed by the API). `id` columns are never writable, so stable keys can't c
 disabled but not deleted. Every insert/update/delete is written to `audit_log` with the actor's id and
 email. The `menus` bucket is public-read by URL, admin-only write, PDF-only, 5 MB max.
 
-## For the admin-panel code
+## For the app code
+- Public catalog reads: `getCatalog()` from `lib/catalog` (server components). Cached 5 min under tag
+  `catalog`; falls back to `lib/config.ts` if Supabase is unconfigured, unreachable, slow (>5 s) or
+  returns incomplete data. `npm run check:catalog` verifies live parity with `lib/config.ts`.
+- Env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the `sb_publishable_…` key).
 - Detect admin status with `select … from admins` (RLS returns the caller's own row only to admins);
   `rpc('is_admin')` does not exist.
 - Publish a menu with `rpc('publish_menu', { p_menu_id })`.

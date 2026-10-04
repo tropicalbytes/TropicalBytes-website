@@ -13,6 +13,14 @@
 // policy is the recommended next step (see google-apps-script/README.md's
 // security notes) but requires wiring a nonce through middleware — left as
 // a deliberate Phase 2 item rather than shipping a CSP that breaks the site.
+//
+// Supabase: the project origin is added to connect-src (REST/Auth/Storage
+// calls from the browser — the admin panel's sign-in) only when
+// NEXT_PUBLIC_SUPABASE_URL is set. Server-side catalog reads aren't subject to CSP.
+const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin
+  : "";
+
 const ContentSecurityPolicy = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' 'unsafe-eval';
@@ -20,7 +28,7 @@ const ContentSecurityPolicy = `
   font-src 'self' https://fonts.gstatic.com;
   img-src 'self' data: https://picsum.photos https://images.unsplash.com https://images.pexels.com;
   frame-src https://www.google.com;
-  connect-src 'self' https://script.google.com https://script.googleusercontent.com;
+  connect-src 'self' https://script.google.com https://script.googleusercontent.com ${supabaseOrigin};
   form-action 'self' https://script.google.com;
   base-uri 'self';
   frame-ancestors 'self';

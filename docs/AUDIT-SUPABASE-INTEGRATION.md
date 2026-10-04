@@ -105,7 +105,7 @@ None outstanding — the one anomaly found in the original audit (Monthly Veg) i
 | Variable | Where used | Exposed to browser? |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | browser + server Supabase clients | Yes (by design — this is fine, it's not a secret) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | browser + server Supabase clients | Yes (by design — RLS is what actually protects data, not key secrecy) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (planned as `…_ANON_KEY`; the modern `sb_publishable_…` key is used instead, 2026-10-04) | browser + server Supabase clients | Yes (by design — RLS is what actually protects data, not key secrecy) |
 | `SUPABASE_SERVICE_ROLE_KEY` | server-only: seed/admin scripts, any future elevated operation | **No — never** |
 | `GAS_WEB_APP_URL` (renamed, dropping `NEXT_PUBLIC_`) | server-only `/api/enquiry` route | No, changed from today's public var |
 | `GAS_SHARED_SECRET` | server-only, verified inside `Code.gs` | No |

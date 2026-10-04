@@ -24,6 +24,7 @@ npm run dev
 | `npm run generate:gas` | Regenerate `google-apps-script/generated-allowlist.gs` from `lib/config.ts` (then paste it into the Apps Script project) |
 | `npm run generate:seed` | Regenerate `supabase/seed.sql` from `lib/config.ts`; fails on any price/id drift vs. the allowlist |
 | `npm run test:db` | Replay all Supabase migrations + seed on an in-memory Postgres and run the RLS/privilege test suite |
+| `npm run check:catalog` | Read-only: fetch the live Supabase catalog and require it to match `lib/config.ts`; prove the fallback triggers |
 | `npm run check` | All of the above checks in one go |
 
 **Changing a price today:** edit `lib/config.ts`, run `npm run generate:gas` and `npm run generate:seed`,
@@ -31,7 +32,8 @@ paste the new allowlist into Apps Script, deploy.
 
 ## Admin panel (Phase 1, in progress)
 A Supabase-backed admin panel will let the owner manage menu, prices, plans and offers without a
-deploy. The database is live and verified; the app code is not built yet. See `supabase/README.md`
+deploy. The database is live and verified, and `lib/catalog` (Supabase reads with a `lib/config.ts`
+fallback) is built and tested but not yet used by the public pages; the admin screens are not built yet. See `supabase/README.md`
 (runbook + checkpoint status), `docs/ADMIN-PHASE1-BLUEPRINT.md` and
 `docs/AUDIT-SUPABASE-INTEGRATION.md`. Until the admin panel ships, `lib/config.ts` remains the source
 the site renders from.
