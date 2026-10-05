@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/admin/auth";
+import { requireAdmin, type AdminContext } from "@/lib/admin/auth";
 import { logActionError, revalidateAfterCatalogWrite } from "@/lib/admin/server";
 import { MAX_MENU_PDF_BYTES, firstIssue, friendlyDbError, type ActionResult } from "@/lib/admin/shared";
 
@@ -10,6 +10,23 @@ const BUCKET = "menus";
 const PATH = "/admin/menu-pdf";
 /** Also refreshes /menu.pdf, which serves the current menu. */
 const refresh = () => revalidateAfterCatalogWrite(PATH);
+
+/**
+ * After a publish, deletes menus that were published before and are no longer
+ * current (row + file), so old weekly menus don't pile up in Storage. Uploads
+ * that were never published are kept. Best effort: the publish has already
+ * succeeded, so a failure here is only logged (the old menu stays listed and
+ * can be deleted by hand).
+ */
+async function removeOldPublishedMenus(supabase: AdminContext["supabase"]) {
+  const { data: old, error } = await supabase.from("menus").select("id, file_path").eq("is_current", false).not("published_at", "is", null);
+  if (error) { logActionError("menu-pdf", error); return; }
+  if (!old?.length) return;
+  const { error: delErr } = await supabase.from("menus").delete().in("id", old.map((m) => m.id));
+  if (delErr) { logActionError("menu-pdf", delErr); return; }
+  const { error: rmErr } = await supabase.storage.from(BUCKET).remove(old.map((m) => m.file_path));
+  if (rmErr) logActionError("menu-pdf", rmErr); // rows are gone; a leftover file is harmless and not listed anywhere
+}
 
 export async function uploadMenuPdf(formData: FormData): Promise<ActionResult> {
   const { supabase } = await requireAdmin();
@@ -41,6 +58,7 @@ export async function uploadMenuPdf(formData: FormData): Promise<ActionResult> {
   if (formData.get("publish") === "on") {
     const { error: pubErr } = await supabase.rpc("publish_menu", { p_menu_id: row.id });
     if (pubErr) { logActionError("menu-pdf", pubErr); refresh(); return { ok: false, message: "Uploaded, but publishing failed. Use Publish below." }; }
+    await removeOldPublishedMenus(supabase);
     refresh();
     return { ok: true, message: `Uploaded and published “${title.data}”.` };
   }
@@ -54,6 +72,7 @@ export async function publishMenu(id: unknown): Promise<ActionResult> {
   if (!parsed.success) return { ok: false, message: "Unknown menu." };
   const { error } = await supabase.rpc("publish_menu", { p_menu_id: parsed.data });
   if (error) { logActionError("menu-pdf", error); return { ok: false, message: friendlyDbError(error) }; }
+  await removeOldPublishedMenus(supabase);
   refresh();
   return { ok: true, message: "Published. This is now the current menu." };
 }

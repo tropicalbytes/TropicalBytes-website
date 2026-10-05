@@ -59,7 +59,7 @@ export default function MenuPdfManager({ menus }: { menus: MenuPdf[] }) {
           </Label>
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <Toggle checked={publishNow} onChange={setPublishNow} label="Publish immediately (replaces the current menu)" />
+          <Toggle checked={publishNow} onChange={setPublishNow} label="Publish immediately (replaces and deletes the current menu)" />
           <Btn onClick={upload} busy={pending} disabled={!file || !title.trim()}><Upload size={16} /> Upload</Btn>
         </div>
         <div className="mt-3"><Status result={result} /></div>
@@ -98,7 +98,7 @@ export default function MenuPdfManager({ menus }: { menus: MenuPdf[] }) {
       <ConfirmDialog
         open={confirmPublish !== null}
         title={`Publish “${confirmPublish?.title ?? ""}”?`}
-        body={current ? `It replaces “${current.title}” as the current menu.` : "It becomes the current menu."}
+        body={current ? `It replaces “${current.title}” as the current menu, and “${current.title}” is deleted.` : "It becomes the current menu."}
         confirmLabel="Publish"
         busy={pending}
         onCancel={() => setConfirmPublish(null)}

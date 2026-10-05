@@ -23,7 +23,7 @@ export default async function MenuPdfPage() {
     <>
       <PageHeader
         title="Menu PDF"
-        description="Upload the weekly subscription menu as a PDF (max 5 MB) and publish it. Only one menu is current at a time; older ones stay here as history until you delete them."
+        description="Upload the weekly subscription menu as a PDF (max 5 MB) and publish it. Only one menu is current at a time. When you publish a new one, the previously published menu is deleted automatically. Uploads you haven't published yet are kept until you publish or delete them."
       />
       <MenuPdfManager menus={menus} />
     </>
