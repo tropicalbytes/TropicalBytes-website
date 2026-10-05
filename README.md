@@ -31,9 +31,11 @@ npm run dev
 paste the new allowlist into Apps Script, deploy.
 
 ## Admin panel (Phase 1, in progress)
-A Supabase-backed admin panel will let the owner manage menu, prices, plans and offers without a
-deploy. The database is live and verified, and `lib/catalog` (Supabase reads with a `lib/config.ts`
-fallback) is built and tested but not yet used by the public pages; the admin screens are not built yet. See `supabase/README.md`
-(runbook + checkpoint status), `docs/ADMIN-PHASE1-BLUEPRINT.md` and
-`docs/AUDIT-SUPABASE-INTEGRATION.md`. Until the admin panel ships, `lib/config.ts` remains the source
-the site renders from.
+`/admin` (sign in at `/admin/login`) lets the owner manage plan prices, menu items, party/bulk items,
+offers, the weekly menu PDF and short site notes, with an Activity log of every change. Only accounts
+listed in the database's `admins` table can sign in; every write is re-checked by Supabase RLS.
+Requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (see `.env.example`).
+
+**Not live yet:** the public pages still render from `lib/config.ts`, so admin edits are stored but not
+shown on the site until the catalog is switched over (plan step 6). See `supabase/README.md`,
+`docs/ADMIN-PHASE1-BLUEPRINT.md` and `docs/AUDIT-SUPABASE-INTEGRATION.md`.

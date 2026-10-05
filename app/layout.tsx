@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import QuickActions from "@/components/QuickActions";
+import SiteChrome from "@/components/SiteChrome";
 import { business } from "@/lib/config";
 
 const manrope = Manrope({
@@ -112,10 +113,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
         />
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
-        <QuickActions />
+        <SiteChrome
+          header={<Navbar />}
+          footer={
+            <>
+              <Footer />
+              <QuickActions />
+            </>
+          }
+        >
+          <main>{children}</main>
+        </SiteChrome>
       </body>
     </html>
   );

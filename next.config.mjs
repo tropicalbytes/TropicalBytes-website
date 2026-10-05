@@ -44,6 +44,11 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // Admin "Menu PDF" uploads go through a server action; allow the 5 MB
+    // file limit plus form overhead (default is 1 MB).
+    serverActions: { bodySizeLimit: "6mb" },
+  },
   images: {
     // Restricted to the external hosts the site actually uses for
     // placeholder photography. Swap to local /public files and this
