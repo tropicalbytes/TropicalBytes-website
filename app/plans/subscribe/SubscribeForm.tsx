@@ -1,15 +1,9 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  business,
-  subscriptionTiers,
-  SubscriptionTier,
-  FoodType,
-  findPlanOption,
-  formatINR,
-} from "@/lib/config";
+import { business, formatINR } from "@/lib/config";
+import type { CatalogPlanOption, CatalogTier } from "@/lib/catalog/core";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
 import { REQUEST_TYPES, MAX_FUTURE_DATE_DAYS, MAX_LENGTHS, MEAL_PREFERENCE_OPTIONS, FOOD_PREFERENCE_OPTIONS } from "@/lib/constants";
 import { isRequired, isValidEmail, isValidPhone, isValidPincode, isFutureOrTodayDate, isWithinFutureWindow, maxLength, validate } from "@/lib/validation";
@@ -59,7 +53,8 @@ const MEAL_COUNT_OPTIONS = [
   { value: "2", label: "2 Meals" },
 ];
 
-function SubscribeForm() {
+/** Plans and prices come from the server page (live catalog), so admin edits show here. */
+export default function SubscribeForm({ tiers, planOptions }: { tiers: CatalogTier[]; planOptions: CatalogPlanOption[] }) {
   const params = useSearchParams();
   const preselected = params.get("tier") || "";
 
@@ -69,12 +64,14 @@ function SubscribeForm() {
   const [errorMessage, setErrorMessage] = useState("");
   const [step, setStep] = useState(0);
 
-  const selectedTier = useMemo(() => subscriptionTiers.find((t) => t.id === values.tierId), [values.tierId]);
+  const selectedTier = useMemo(() => tiers.find((t) => t.id === values.tierId), [tiers, values.tierId]);
 
   const selectedPlanOption = useMemo(() => {
     if (!values.tierId || !values.foodPreference || !values.mealCount) return undefined;
-    return findPlanOption(values.tierId, values.foodPreference as FoodType, Number(values.mealCount) as 1 | 2);
-  }, [values.tierId, values.foodPreference, values.mealCount]);
+    return planOptions.find(
+      (p) => p.tierId === values.tierId && p.foodType === values.foodPreference && p.mealCount === Number(values.mealCount)
+    );
+  }, [planOptions, values.tierId, values.foodPreference, values.mealCount]);
 
   const update = (field: keyof FormState, value: string) =>
     setValues((v) => {
@@ -139,7 +136,12 @@ function SubscribeForm() {
   const validateStep = (stepIndex: number) => {
     const config = stepRules[stepIndex];
     if (!config) return {};
-    return validate(asStrings(), config.rules, config.messages);
+    const found = validate(asStrings(), config.rules, config.messages);
+    // A plan can hide some Veg/Non-Veg × 1/2-meal combinations in the admin.
+    if (stepIndex === 0 && Object.keys(found).length === 0 && !selectedPlanOption) {
+      found.tierId = "This plan isn't available with that food type and number of meals. Please choose another option.";
+    }
+    return found;
   };
 
   const goNext = () => {
@@ -265,7 +267,7 @@ function SubscribeForm() {
 
             <Field label="Plan" error={errors.tierId}>
               <div className="grid gap-3 sm:grid-cols-2">
-                {subscriptionTiers.map((t) => (
+                {tiers.map((t) => (
                   <TierOption key={t.id} tier={t} selected={values.tierId === t.id} onSelect={() => update("tierId", t.id)} />
                 ))}
               </div>
@@ -435,7 +437,7 @@ function SubscribeForm() {
   );
 }
 
-function TierOption({ tier, selected, onSelect }: { tier: SubscriptionTier; selected: boolean; onSelect: () => void }) {
+function TierOption({ tier, selected, onSelect }: { tier: CatalogTier; selected: boolean; onSelect: () => void }) {
   return (
     <button
       type="button"
@@ -480,23 +482,5 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
       <span className="border-r border-sand py-1.5 pr-4 text-left text-ink/55 sm:pr-6">{label}</span>
       <span className="py-1.5 pl-4 text-left font-medium text-ink/85 break-words sm:pl-6">{value}</span>
     </div>
-  );
-}
-
-export default function SubscribePage() {
-  return (
-    <section className="mx-auto max-w-content px-5 py-16 md:px-8">
-      <p className="text-xs font-semibold uppercase tracking-widest text-copper">Subscription Request</p>
-      <h1 className="mt-3 font-display text-3xl font-semibold text-forest sm:text-4xl">Set up your meal plan</h1>
-      <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink/70 text-justify">
-        A quick, guided form: this is a request, not a payment. Our team will contact you to confirm
-        everything.
-      </p>
-      <div className="mt-10">
-        <Suspense fallback={null}>
-          <SubscribeForm />
-        </Suspense>
-      </div>
-    </section>
   );
 }

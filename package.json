@@ -13,7 +13,8 @@
     "generate:menu-json": "tsx scripts/export-menu-json.ts",
     "test:db": "node supabase/tests/db.test.mjs",
     "check:catalog": "tsx --env-file=.env.local scripts/check-catalog.ts",
-    "check": "npm run typecheck && npm run lint && npm run generate:seed && npm run test:db"
+    "check:enquiry": "tsx scripts/check-enquiry.ts",
+    "check": "npm run typecheck && npm run lint && npm run generate:seed && npm run test:db && npm run check:enquiry"
   },
   "dependencies": {
     "@radix-ui/react-popover": "^1.1.23",

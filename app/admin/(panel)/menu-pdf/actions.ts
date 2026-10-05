@@ -1,15 +1,15 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin/auth";
-import { logActionError } from "@/lib/admin/server";
+import { logActionError, revalidateAfterCatalogWrite } from "@/lib/admin/server";
 import { MAX_MENU_PDF_BYTES, firstIssue, friendlyDbError, type ActionResult } from "@/lib/admin/shared";
 
 const BUCKET = "menus";
 const PATH = "/admin/menu-pdf";
-const refresh = () => { revalidatePath(PATH); revalidatePath("/admin"); };
+/** Also refreshes /menu.pdf, which serves the current menu. */
+const refresh = () => revalidateAfterCatalogWrite(PATH);
 
 export async function uploadMenuPdf(formData: FormData): Promise<ActionResult> {
   const { supabase } = await requireAdmin();

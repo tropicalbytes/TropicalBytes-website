@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 };
 import DeliveryScooter from "@/components/icons/DeliveryScooter";
 import { business } from "@/lib/config";
+import OffersBanner from "@/components/OffersBanner";
 import {
   Leaf,
   ChefHat,
@@ -75,6 +76,9 @@ const lifestyleMealPlans = [
     icon: Users,
   },
 ];
+
+// Refreshes when the owner saves in /admin (cache tag "catalog"), and at least every 5 minutes.
+export const revalidate = 300;
 
 export default function HomePage() {
   return (
@@ -165,6 +169,9 @@ export default function HomePage() {
           </Reveal>
         </div>
       </section>
+
+      {/* LIVE OFFERS — managed in /admin → Offers; renders nothing when none are live */}
+      <OffersBanner className="pt-12" />
 
       {/* MEAL PLANS */}
       <section id="our-plans" className="scroll-mt-20 mx-auto max-w-content px-5 py-20 md:px-8">

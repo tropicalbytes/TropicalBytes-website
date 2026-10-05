@@ -4,7 +4,8 @@ import PageHero from "@/components/PageHero";
 import { LinkButton } from "@/components/Button";
 import Reveal from "@/components/Reveal";
 import { Bell } from "lucide-react";
-import { subscriptionTiers, business } from "@/lib/config";
+import OffersBanner from "@/components/OffersBanner";
+import { getCatalog } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   title: { absolute: "Subscription Meal Plans - TropicalBytes" },
@@ -15,7 +16,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PlansPage() {
+// Refreshes when the owner saves in /admin (cache tag "catalog"), and at least every 5 minutes.
+export const revalidate = 300;
+
+export default async function PlansPage() {
+  const catalog = await getCatalog();
   return (
     <>
       <PageHero
@@ -28,6 +33,8 @@ export default function PlansPage() {
         image={{ src: "/brand/meal-box.jpg", alt: "A TropicalBytes meal box with rice, dal, curry, and fresh vegetables" }}
       />
 
+      <OffersBanner className="pt-12" />
+
       <section className="mx-auto max-w-content px-5 py-20 md:px-8">
         <Reveal>
           <p className="text-xs font-semibold uppercase tracking-widest text-copper">Pick a plan</p>
@@ -37,9 +44,9 @@ export default function PlansPage() {
         </Reveal>
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {subscriptionTiers.map((tier, i) => (
+          {catalog.tiers.map((tier, i) => (
             <Reveal key={tier.id} delay={i * 80}>
-              <PlanCard tier={tier} popular={tier.id === "weekly"} />
+              <PlanCard tier={tier} options={catalog.planOptions.filter((o) => o.tierId === tier.id)} popular={tier.isPopular} />
             </Reveal>
           ))}
         </div>

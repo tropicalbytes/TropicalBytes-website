@@ -1,57 +1,37 @@
-import { GAS_WEB_APP_URL } from "./config";
-
 export type SubmitResult = { ok: true; enquiryId?: string } | { ok: false; message: string };
 
 const GENERIC_ERROR =
   "Something went wrong while submitting your request. Please try again or contact us directly.";
 
 /**
- * Submits form data to the Google Apps Script Web App, which independently
- * validates everything, writes the enquiry to the relevant Google Sheet, and
- * emails the business a copy.
+ * Submits form data to the site's own /api/enquiry route, which prices the
+ * enquiry from the live catalog (Supabase, falling back to lib/config.ts) and
+ * forwards it to the Google Apps Script Web App that writes the Sheet and
+ * emails the business.
  *
- * TRUST BOUNDARY: this call crosses into an untrusted-by-default backend
- * boundary — anything in `payload` is advisory only. The Apps Script backend
- * re-validates every field, ignores/overwrites client-supplied `status`,
- * generates its own authoritative `enquiryId` and timestamp, and recomputes
- * price from its own allowlisted configuration. Never add a field here and assume the backend
- * will treat it as authoritative without also updating Code.gs.
- *
- * Uses a plain (non-preflighted) POST with a text/plain body so it works
- * against Apps Script Web Apps without extra CORS configuration.
+ * TRUST BOUNDARY: anything in `payload` is advisory only. Labels and totals
+ * are recomputed server-side from ids + quantities (lib/enquiry.ts); Apps
+ * Script re-validates the customer's details and generates the authoritative
+ * enquiry id and timestamp.
  */
 export async function submitToGoogleSheets(
   payload: Record<string, unknown>
 ): Promise<SubmitResult> {
-  if (!GAS_WEB_APP_URL) {
-    // No backend configured yet — fail gracefully with a clear message
-    // rather than a confusing network error, so local/demo builds still work.
-    console.warn(
-      "NEXT_PUBLIC_GAS_WEB_APP_URL is not set. See google-apps-script/README.md."
-    );
-    return { ok: false, message: GENERIC_ERROR };
-  }
-
   try {
-    const response = await fetch(GAS_WEB_APP_URL, {
+    const response = await fetch("/api/enquiry", {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
-      return { ok: false, message: GENERIC_ERROR };
-    }
-
-    const data = await response.json().catch(() => ({ status: "ok" }));
-    if (data.status && data.status !== "ok") {
-      // The backend returns a safe, generic message on failure (never a raw
-      // stack trace or internal error) — pass it through when present.
-      return { ok: false, message: typeof data.message === "string" ? data.message : GENERIC_ERROR };
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data || data.status !== "ok") {
+      // The route returns safe, customer-facing messages (never raw errors).
+      return { ok: false, message: typeof data?.message === "string" ? data.message : GENERIC_ERROR };
     }
 
     return { ok: true, enquiryId: typeof data.enquiryId === "string" ? data.enquiryId : undefined };
-  } catch (error) {
+  } catch {
     return {
       ok: false,
       message: "Something went wrong while submitting your request. Please check your connection and try again, or contact us directly.",

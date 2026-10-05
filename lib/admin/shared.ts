@@ -7,11 +7,11 @@ import { z } from "zod";
 export type ActionResult = { ok: true; message: string } | { ok: false; message: string };
 
 /**
- * False until plan step 6 wires getCatalog() into the public pages. While
- * false, the admin shows a banner explaining that saved changes are stored
- * (and audited) but the live site still renders lib/config.ts.
+ * True since plan step 6 (2026-10-05): public pages render getCatalog(), so
+ * admin saves show on the website. While false, the admin showed a banner
+ * explaining that changes were stored but not yet live.
  */
-export const PUBLIC_SITE_READS_DATABASE = false;
+export const PUBLIC_SITE_READS_DATABASE = true;
 
 /** Price changes bigger than this (either direction) get an extra warning before saving. */
 export const BIG_PRICE_CHANGE = 0.25;

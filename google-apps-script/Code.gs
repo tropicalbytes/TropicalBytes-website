@@ -34,6 +34,18 @@
  *
  * After changing menu/pricing in lib/config.ts, run `npm run generate:gas`
  * and re-paste generated-allowlist.gs into the Apps Script project.
+ *
+ * SIGNED REQUESTS (admin-panel era)
+ * The website now posts to its own /api/enquiry route, which prices the
+ * enquiry from the live catalog the owner edits in /admin and forwards it
+ * here with `signature` = the shared secret. For signed requests the item
+ * labels and totals in `raw.server` are trusted (the allowlist can't know
+ * about items added in the admin); every customer field is still validated
+ * below. Script Properties (Project Settings > Script Properties):
+ *   ENQUIRY_SHARED_SECRET  same value as GAS_SHARED_SECRET on the website.
+ *                          Unset = signed path disabled (legacy only).
+ *   REQUIRE_SIGNED         "true" = reject unsigned requests (turn on once
+ *                          the website sends signed requests in production).
  */
 
 const BUSINESS_EMAIL = "tropicalbytes.in@gmail.com"; // <-- set the real inbox to notify
@@ -86,6 +98,7 @@ const MAX_QUANTITY = 20; // per-person meal quantity / item count sanity ceiling
 const MAX_SELECTED_ITEMS = 40; // guard against absurdly large arrays
 const MAX_REQUEST_BYTES = 20000; // ~20 KB is generous for these forms
 const MAX_REQUESTS_PER_MINUTE = 30; // coarse, global — see README limitations note
+const MAX_SERVER_TEXT = 4000; // cap on server-computed labels/totals in signed requests
 
 // ============================================================================
 // ENTRY POINT
@@ -127,13 +140,19 @@ function doPost(e) {
       return jsonResponse({ status: "error", message: "Too many requests right now. Please try again in a minute." });
     }
 
+    const signed = isSignedRequest(raw);
+    if (!signed && requireSignedRequests()) {
+      logRejected("unsigned_request", { requestType: raw.requestType });
+      return jsonResponse({ status: "error", message: GENERIC_ERROR_MESSAGE });
+    }
+
     const requestType = raw.requestType;
     if (!isString(requestType) || !SHEET_NAMES[requestType]) {
       logRejected("unknown_request_type", { requestType: requestType });
       return jsonResponse({ status: "error", message: GENERIC_ERROR_MESSAGE });
     }
 
-    const validation = validateAndNormalize(requestType, raw);
+    const validation = validateAndNormalize(requestType, raw, signed);
     if (!validation.ok) {
       logRejected("validation_failed", { requestType: requestType, errors: validation.errors });
       return jsonResponse({ status: "error", message: GENERIC_ERROR_MESSAGE });
@@ -175,6 +194,34 @@ function jsonResponse(data) {
 
 function doGet() {
   return ContentService.createTextOutput("TropicalBytes enquiry endpoint is live.");
+}
+
+// ============================================================================
+// SIGNED REQUESTS (from the website's /api/enquiry route)
+// ============================================================================
+
+function isSignedRequest(raw) {
+  const expected = PropertiesService.getScriptProperties().getProperty("ENQUIRY_SHARED_SECRET");
+  if (!expected || expected.length < 32 || !isString(raw.signature)) return false;
+  // Length-independent comparison so timing doesn't reveal how much matched.
+  const given = raw.signature;
+  let diff = given.length ^ expected.length;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ (i < given.length ? given.charCodeAt(i) : 0);
+  }
+  return diff === 0;
+}
+
+function requireSignedRequests() {
+  return PropertiesService.getScriptProperties().getProperty("REQUIRE_SIGNED") === "true";
+}
+
+/** A server-computed display string from a signed request: non-empty (unless allowEmpty), bounded length. */
+function serverText(raw, key, allowEmpty) {
+  const v = raw.server && typeof raw.server === "object" ? raw.server[key] : undefined;
+  if (!isString(v) || v.length > MAX_SERVER_TEXT) return null;
+  if (!allowEmpty && v.trim().length === 0) return null;
+  return v.trim();
 }
 
 // ============================================================================
@@ -283,7 +330,7 @@ function validateIdArray(v, allowlistMap, maxItems, quantitiesMap) {
  * { ok: false, errors } listing which fields failed (for internal logging
  * only — never surfaced to the caller).
  */
-function validateAndNormalize(requestType, raw) {
+function validateAndNormalize(requestType, raw, signed) {
   const errors = [];
   const check = function (cond, name) { if (!cond) errors.push(name); };
 
@@ -313,7 +360,9 @@ function validateAndNormalize(requestType, raw) {
     // x Veg/Non-Veg x 1/2 meals) rather than a per-week formula — the
     // server looks up the plan by id and trusts ITS OWN price, never one
     // computed client-side.
-    check(isNonEmptyString(planOptionId) && Object.prototype.hasOwnProperty.call(GENERATED_ALLOWLIST.SUBSCRIPTION_PLANS, planOptionId), "planOptionId");
+    if (!signed) {
+      check(isNonEmptyString(planOptionId) && Object.prototype.hasOwnProperty.call(GENERATED_ALLOWLIST.SUBSCRIPTION_PLANS, planOptionId), "planOptionId");
+    }
     check(isOneOf(mealPreference, GENERATED_ALLOWLIST.MEAL_PREFERENCES), "mealPreference");
     check(isOneOf(foodPreference, GENERATED_ALLOWLIST.FOOD_PREFERENCES), "foodPreference");
     check(isValidBusinessDate(startDate), "startDate");
@@ -325,19 +374,27 @@ function validateAndNormalize(requestType, raw) {
 
     if (errors.length > 0) return { ok: false, errors: errors };
 
-    const plan = GENERATED_ALLOWLIST.SUBSCRIPTION_PLANS[planOptionId];
-    check(!!plan && plan.foodType === foodPreference, "planOptionId");
+    let planInfo;
+    if (signed) {
+      // Priced by the website from the live catalog (admin-managed).
+      planInfo = { label: serverText(raw, "selectedPlan"), deliveryLabel: serverText(raw, "duration"), total: serverText(raw, "estimatedTotal") };
+      check(!!planInfo.label && !!planInfo.deliveryLabel && !!planInfo.total, "server");
+    } else {
+      const plan = GENERATED_ALLOWLIST.SUBSCRIPTION_PLANS[planOptionId];
+      check(!!plan && plan.foodType === foodPreference, "planOptionId");
+      if (plan) planInfo = { label: plan.label, deliveryLabel: plan.deliveryLabel, total: "\u20B9" + plan.totalPrice.toLocaleString("en-IN") };
+    }
     if (errors.length > 0) return { ok: false, errors: errors };
 
     return {
       ok: true,
       data: Object.assign({}, base, {
-        selectedPlan: plan.label,
-        duration: plan.deliveryLabel,
+        selectedPlan: planInfo.label,
+        duration: planInfo.deliveryLabel,
         mealPreference: mealPreference,
         foodPreference: foodPreference,
         startDate: startDate,
-        estimatedTotal: "\u20B9" + plan.totalPrice.toLocaleString("en-IN"), // authoritative, server-side plan price
+        estimatedTotal: planInfo.total, // authoritative: website server (signed) or this script's allowlist
         address: raw.address.trim(),
         area: raw.area.trim(),
         city: raw.city.trim(),
@@ -354,6 +411,27 @@ function validateAndNormalize(requestType, raw) {
     check(isOneOf(foodPreference, allowedFoodPrefs), "foodPreference");
     check(isNonEmptyString(raw.deliveryLocation) && withinLength(raw.deliveryLocation, MAX_LENGTHS.location), "deliveryLocation");
     check(raw.notes === undefined || withinLength(String(raw.notes || ""), MAX_LENGTHS.notes), "notes");
+    if (signed) {
+      const fp = serverText(raw, "foodPreference");
+      const meals = serverText(raw, "selectedMeals");
+      const addOns = serverText(raw, "addOns", true);
+      const total = serverText(raw, "estimatedTotal");
+      check(!!fp && isOneOf(fp, allowedFoodPrefs), "server.foodPreference");
+      check(!!meals && addOns !== null && !!total, "server");
+      if (errors.length > 0) return { ok: false, errors: errors };
+      return {
+        ok: true,
+        data: Object.assign({}, base, {
+          foodPreference: fp,
+          selectedMeals: meals,
+          deliveryLocation: raw.deliveryLocation.trim(),
+          addOns: addOns,
+          estimatedTotal: total,
+          notes: raw.notes ? String(raw.notes).trim() : "",
+        }),
+      };
+    }
+
     check(isValidItemQuantitiesObject(raw.itemQuantities), "itemQuantities");
 
     const itemQuantities = (raw.itemQuantities && typeof raw.itemQuantities === "object") ? raw.itemQuantities : null;
@@ -364,7 +442,7 @@ function validateAndNormalize(requestType, raw) {
     check(addOns.ok, "selectedAddOnIds");
 
     // Require at least one item overall across Veg, Non-Veg, and Desserts
-    check(meals.labels.length > 0 || addOns.labels.length > 0, "selectedMealIds");
+    check(!meals.ok || !addOns.ok || meals.labels.length > 0 || addOns.labels.length > 0, "selectedMealIds");
 
     if (errors.length > 0) return { ok: false, errors: errors };
 
@@ -473,6 +551,24 @@ function validateAndNormalize(requestType, raw) {
     check(isValidBusinessDate(eventDate), "eventDate");
     check(isNonEmptyString(raw.deliveryLocation) && withinLength(raw.deliveryLocation, MAX_LENGTHS.location), "deliveryLocation");
     check(raw.notes === undefined || withinLength(String(raw.notes || ""), MAX_LENGTHS.notes), "notes");
+
+    if (signed) {
+      const selectedItems = serverText(raw, "selectedItems");
+      const total = serverText(raw, "estimatedTotal");
+      check(!!selectedItems && !!total, "server");
+      if (errors.length > 0) return { ok: false, errors: errors };
+      return {
+        ok: true,
+        data: Object.assign({}, base, {
+          selectedItems: selectedItems,
+          estimatedTotal: total, // computed by the website server from the live catalog
+          eventDate: eventDate,
+          deliveryLocation: raw.deliveryLocation.trim(),
+          notes: raw.notes ? String(raw.notes).trim() : "",
+        }),
+      };
+    }
+
     check(isValidItemQuantitiesObject(raw.itemQuantities), "itemQuantities");
 
     const itemQuantities = (raw.itemQuantities && typeof raw.itemQuantities === "object") ? raw.itemQuantities : null;

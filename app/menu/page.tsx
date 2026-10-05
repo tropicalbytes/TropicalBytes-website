@@ -4,7 +4,8 @@ import { Download, Leaf } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import VegIndicator, { FoodIndicatorType } from "@/components/VegIndicator";
 import { LinkButton } from "@/components/Button";
-import { business, individualMenu, formatINR, MenuItem } from "@/lib/config";
+import { formatINR } from "@/lib/config";
+import { getCatalog, type CatalogMenuItem } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   title: { absolute: "Subscription Menu - TropicalBytes" },
@@ -28,11 +29,8 @@ const MENU_PAGE_DESSERT_OVERRIDE: Record<string, FoodIndicatorType> = {
   "Death By Chocolate": "veg",
 };
 
-const categories: { title: string; items: MenuItem[]; type: FoodIndicatorType | "auto"; overrides?: Record<string, FoodIndicatorType> }[] = [
-  { title: "Veg Meals", items: individualMenu.veg, type: "veg" },
-  { title: "Non-Veg Meals", items: individualMenu.nonVeg, type: "non-veg" },
-  { title: "Desserts", items: individualMenu.desserts, type: "dessert", overrides: MENU_PAGE_DESSERT_OVERRIDE },
-];
+// Refreshes when the owner saves in /admin (cache tag "catalog"), and at least every 5 minutes.
+export const revalidate = 300;
 
 function MenuSection({
   title,
@@ -41,7 +39,7 @@ function MenuSection({
   overrides,
 }: {
   title: string;
-  items: MenuItem[];
+  items: CatalogMenuItem[];
   type: FoodIndicatorType | "auto";
   overrides?: Record<string, FoodIndicatorType>;
 }) {
@@ -52,7 +50,7 @@ function MenuSection({
         {items.map((item) => {
           const resolvedType = overrides?.[item.name] ?? (type === "auto" ? (item.vegetarian ? "veg" : "non-veg") : type);
           return (
-            <div key={item.name} className="flex items-center justify-between gap-4 py-3.5">
+            <div key={item.id} className="flex items-center justify-between gap-4 py-3.5">
               <div className="min-w-0">
                 <p className="truncate font-display text-[15px] font-semibold text-ink">{item.name}</p>
                 <div className="mt-1">
@@ -68,7 +66,13 @@ function MenuSection({
   );
 }
 
-export default function MenuPage() {
+export default async function MenuPage() {
+  const { menu } = await getCatalog();
+  const categories: { title: string; items: CatalogMenuItem[]; type: FoodIndicatorType | "auto"; overrides?: Record<string, FoodIndicatorType> }[] = [
+    { title: "Veg Meals", items: menu.veg, type: "veg" },
+    { title: "Non-Veg Meals", items: menu.nonVeg, type: "non-veg" },
+    { title: "Desserts", items: menu.desserts, type: "dessert", overrides: MENU_PAGE_DESSERT_OVERRIDE },
+  ];
   return (
     <>
       {/* HERO — the food-and-wave composition is a single pre-composed
@@ -99,10 +103,11 @@ export default function MenuPage() {
               </p>
               <div className="mt-5 sm:mt-6">
                 <a
-                  href="/tropicalbytes-menu.pdf"
-                  download
+                  href="/menu.pdf"
+                  target="_blank"
+                  rel="noopener"
                   className="inline-flex items-center gap-2 rounded-full border-2 border-forest bg-white px-6 py-3 text-sm font-semibold text-forest transition-all duration-200 hover:-translate-y-0.5 hover:bg-palegreen"
-                  aria-label="Download the TropicalBytes menu as a PDF"
+                  aria-label="Download the TropicalBytes menu as a PDF (opens in a new tab)"
                 >
                   <Download size={16} aria-hidden="true" />
                   Download Menu

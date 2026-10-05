@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Rocket, Star, Trophy, Gem, ArrowRight, ShoppingCart } from "lucide-react";
-import { SubscriptionTier, planOptionsForTier, formatINR } from "@/lib/config";
+import { formatINR } from "@/lib/config";
+import type { CatalogPlanOption, CatalogTier } from "@/lib/catalog/core";
 
 const TIER_ICON: Record<string, typeof Rocket> = {
   trial: Rocket,
@@ -14,9 +15,8 @@ const TIER_ICON: Record<string, typeof Rocket> = {
  * per-meal price so the customer can compare before continuing to the
  * guided wizard. Full price breakdown lives on /plans/subscribe.
  */
-export default function PlanCard({ tier, popular = false }: { tier: SubscriptionTier; popular?: boolean }) {
-  const options = planOptionsForTier(tier.id);
-  const cheapest = options.reduce((min, o) => (o.perMealPrice < min.perMealPrice ? o : min), options[0]);
+export default function PlanCard({ tier, options, popular = false }: { tier: CatalogTier; options: CatalogPlanOption[]; popular?: boolean }) {
+  const cheapest = options.length ? options.reduce((min, o) => (o.perMealPrice < min.perMealPrice ? o : min), options[0]) : null;
   const Icon = TIER_ICON[tier.id] || Star;
 
   return (
@@ -38,11 +38,13 @@ export default function PlanCard({ tier, popular = false }: { tier: Subscription
       <p className="mt-4 font-display text-lg font-bold text-ink">{tier.name}</p>
       <p className="mt-1 text-sm text-ink-secondary">{tier.tagline}</p>
 
-      <div className="mt-4 flex items-baseline gap-1">
-        <span className="text-xs font-medium text-ink-secondary">From</span>
-        <span className="font-display text-2xl font-extrabold text-forest">{formatINR(cheapest.perMealPrice)}</span>
-        <span className="text-xs font-medium text-ink-secondary">/ meal</span>
-      </div>
+      {cheapest && (
+        <div className="mt-4 flex items-baseline gap-1">
+          <span className="text-xs font-medium text-ink-secondary">From</span>
+          <span className="font-display text-2xl font-extrabold text-forest">{formatINR(cheapest.perMealPrice)}</span>
+          <span className="text-xs font-medium text-ink-secondary">/ meal</span>
+        </div>
+      )}
       <p className="text-xs text-ink-secondary">{tier.durationLabel}</p>
 
       <div className="mt-auto pt-6">

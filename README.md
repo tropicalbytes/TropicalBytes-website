@@ -24,11 +24,11 @@ npm run dev
 | `npm run generate:gas` | Regenerate `google-apps-script/generated-allowlist.gs` from `lib/config.ts` (then paste it into the Apps Script project) |
 | `npm run generate:seed` | Regenerate `supabase/seed.sql` from `lib/config.ts`; fails on any price/id drift vs. the allowlist |
 | `npm run test:db` | Replay all Supabase migrations + seed on an in-memory Postgres and run the RLS/privilege test suite |
-| `npm run check:catalog` | Read-only: fetch the live Supabase catalog and require it to match `lib/config.ts`; prove the fallback triggers |
+| `npm run check:catalog` | Read-only: fetch the live Supabase catalog and compare it with `lib/config.ts`; prove the fallback triggers (differences are expected once the owner edits prices) |
+| `npm run check:enquiry` | Run the real `Code.gs` locally against `/api/enquiry`'s output (legacy + signed paths) |
 | `npm run check` | All of the above checks in one go |
 
-**Changing a price today:** edit `lib/config.ts`, run `npm run generate:gas` and `npm run generate:seed`,
-paste the new allowlist into Apps Script, deploy.
+**Changing a price:** use `/admin`. `lib/config.ts` is only the offline fallback now.
 
 ## Admin panel (Phase 1, in progress)
 `/admin` (sign in at `/admin/login`) lets the owner manage plan prices, menu items, party/bulk items,
@@ -36,6 +36,8 @@ offers, the weekly menu PDF and short site notes, with an Activity log of every 
 listed in the database's `admins` table can sign in; every write is re-checked by Supabase RLS.
 Requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (see `.env.example`).
 
-**Not live yet:** the public pages still render from `lib/config.ts`, so admin edits are stored but not
-shown on the site until the catalog is switched over (plan step 6). See `supabase/README.md`,
+Public pages read the same data (`lib/catalog`, falling back to `lib/config.ts` if Supabase is down) and
+refresh within seconds of an admin save. Enquiries go through the site's `/api/enquiry` route, which
+prices them from the catalog and forwards them to Apps Script with `GAS_SHARED_SECRET` — see
+`google-apps-script/README.md` §6 for the one-time Apps Script setup. See `supabase/README.md`,
 `docs/ADMIN-PHASE1-BLUEPRINT.md` and `docs/AUDIT-SUPABASE-INTEGRATION.md`.

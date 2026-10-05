@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import PageHero from "@/components/PageHero";
 import MultiSelectCombobox from "@/components/MultiSelectCombobox";
-import { business, buildMealOptionGroups, buildAddOnOptionGroups, formatINR, getIndividualItemPrice, getIndividualItemLabel } from "@/lib/config";
+import { business, formatINR, type MenuOptionGroup } from "@/lib/config";
+import type { Catalog, CatalogMenuItem } from "@/lib/catalog/core";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
 import { isRequired, isValidEmail, isValidPhone, maxLength, validate } from "@/lib/validation";
 import { REQUEST_TYPES, MAX_LENGTHS } from "@/lib/constants";
@@ -12,10 +12,6 @@ import ErrorMessage from "@/components/ErrorMessage";
 import { Button } from "@/components/Button";
 import { CardHeader, IconInput, Field, FORM_CARD_CLASS } from "@/components/FormKit";
 import {
-  Sparkles,
-  ShieldCheck,
-  Truck,
-  CalendarClock,
   Leaf,
   Beef,
   Cookie,
@@ -49,9 +45,25 @@ const CATEGORIES: { id: Category; label: string; dot: string; icon: LucideIcon }
   { id: "desserts", label: "Desserts", dot: "bg-brown", icon: Cookie },
 ];
 
-const addOnGroups = buildAddOnOptionGroups();
+const toOptions = (items: CatalogMenuItem[]) =>
+  items.map((item) => ({ id: item.id, label: item.name, meta: formatINR(item.price), price: item.price }));
 
-function RequestForm() {
+/** Dishes and prices come from the server page (live catalog), so admin edits show here. */
+export default function RequestForm({ menu }: { menu: Catalog["menu"] }) {
+  const { vegGroups, nonVegGroups, addOnGroups, vegIds, nonVegIds, getIndividualItemPrice, getIndividualItemLabel } = useMemo(() => {
+    const vegGroups: MenuOptionGroup[] = [{ group: "Veg Meals", options: toOptions(menu.veg) }];
+    const nonVegGroups: MenuOptionGroup[] = [{ group: "Non-Veg Meals", options: toOptions(menu.nonVeg) }];
+    const addOnGroups: MenuOptionGroup[] = [{ group: "Desserts", options: toOptions(menu.desserts) }];
+    const itemsById = new Map([...menu.veg, ...menu.nonVeg, ...menu.desserts].map((i) => [i.id, i]));
+    return {
+      vegGroups, nonVegGroups, addOnGroups,
+      vegIds: new Set(menu.veg.map((i) => i.id)),
+      nonVegIds: new Set(menu.nonVeg.map((i) => i.id)),
+      getIndividualItemPrice: (id: string) => itemsById.get(id)?.price ?? 0,
+      getIndividualItemLabel: (id: string) => itemsById.get(id)?.name ?? id,
+    };
+  }, [menu]);
+
   const [category, setCategory] = useState<Category>("veg");
   const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
   const [values, setValues] = useState<FormState>({
@@ -75,10 +87,7 @@ function RequestForm() {
     if (category === "nonveg") setValues((v) => ({ ...v, foodPreference: "Non-Veg" }));
   }, [category]);
 
-  const mealGroups = useMemo(() => {
-    if (category === "desserts") return [];
-    return buildMealOptionGroups(category === "nonveg" ? "Non-Veg" : "Veg");
-  }, [category]);
+  const mealGroups = category === "desserts" ? [] : category === "nonveg" ? nonVegGroups : vegGroups;
 
   const update = (field: keyof FormState, value: string) => setValues((v) => ({ ...v, [field]: value }));
 
@@ -165,15 +174,15 @@ function RequestForm() {
   // Quantities per category
   const vegQuantity = useMemo(() => {
     return values.selectedMeals
-      .filter((id) => id.startsWith("veg-"))
+      .filter((id) => vegIds.has(id))
       .reduce((sum, id) => sum + (itemQuantities[id] || 0), 0);
-  }, [values.selectedMeals, itemQuantities]);
+  }, [values.selectedMeals, itemQuantities, vegIds]);
 
   const nonVegQuantity = useMemo(() => {
     return values.selectedMeals
-      .filter((id) => id.startsWith("non-veg-"))
+      .filter((id) => nonVegIds.has(id))
       .reduce((sum, id) => sum + (itemQuantities[id] || 0), 0);
-  }, [values.selectedMeals, itemQuantities]);
+  }, [values.selectedMeals, itemQuantities, nonVegIds]);
 
   const dessertQuantity = useMemo(() => {
     return values.selectedAddOns
@@ -187,7 +196,7 @@ function RequestForm() {
     return Object.entries(itemQuantities).reduce((sum, [id, qty]) => {
       return sum + getIndividualItemPrice(id) * qty;
     }, 0);
-  }, [itemQuantities]);
+  }, [itemQuantities, getIndividualItemPrice]);
 
   // Derived total item count
   const totalItemCount = useMemo(() => {
@@ -209,7 +218,7 @@ function RequestForm() {
         return { id, label, price, quantity: qty, subtotal: price * qty };
       })
       .filter(Boolean) as { id: string; label: string; price: number; quantity: number; subtotal: number }[];
-  }, [values.selectedMeals, values.selectedAddOns, itemQuantities]);
+  }, [values.selectedMeals, values.selectedAddOns, itemQuantities, getIndividualItemPrice, getIndividualItemLabel]);
 
   const effectiveFoodPreference = useMemo(() => {
     const hasVegMeal = vegQuantity > 0;
@@ -494,31 +503,5 @@ function RequestForm() {
         </div>
       </form>
     </div>
-  );
-}
-
-export default function IndividualMealRequestPage() {
-  return (
-    <>
-      <PageHero
-        variant="light"
-        eyebrow="Individual Meal"
-        heading="Single"
-        highlight="Meal"
-        description="Fresh meals delivered when you need them. Choose a lunch or dinner without committing to a long-term plan."
-        image={{ src: "/brand/meal-box-light.jpg", alt: "A TropicalBytes single meal box with rice, dal, curry, and fresh vegetables" }}
-        compact
-        imageFrame={false}
-        badges={[
-          { icon: Sparkles, label: "Freshly Prepared", sublabel: "Everyday" },
-          { icon: ShieldCheck, label: "Hygienic & Safe", sublabel: "Quality assured" },
-          { icon: Truck, label: "On-Time Delivery", sublabel: "Right to your door" },
-          { icon: CalendarClock, label: "No Commitment", sublabel: "Order anytime" },
-        ]}
-      />
-      <section className="mx-auto max-w-content px-5 pb-16 pt-10 md:px-8">
-        <RequestForm />
-      </section>
-    </>
   );
 }

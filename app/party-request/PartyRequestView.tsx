@@ -4,7 +4,8 @@ import { useState, useMemo } from "react";
 import Image from "next/image";
 import Reveal from "@/components/Reveal";
 import MultiSelectCombobox from "@/components/MultiSelectCombobox";
-import { business, partyBulkOrders, buildPartyOptionGroups, getPartyItemPrice, getPartyItemDetails, formatINR } from "@/lib/config";
+import { business, formatINR, type MenuOptionGroup } from "@/lib/config";
+import type { Catalog, CatalogPartyItem } from "@/lib/catalog/core";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
 import { isRequired, isValidEmail, isValidPhone, isFutureOrTodayDate, isWithinFutureWindow, maxLength, validate } from "@/lib/validation";
 import { REQUEST_TYPES, MAX_FUTURE_DATE_DAYS, MAX_LENGTHS } from "@/lib/constants";
@@ -14,9 +15,41 @@ import { Button } from "@/components/Button";
 import { CardHeader, IconInput, IconTextarea, Field } from "@/components/FormKit";
 import { Users, Clock, Package, Leaf, User, Phone as PhoneIcon, Mail, Calendar, MapPin, MessageSquare, Receipt } from "lucide-react";
 
-const partyGroups = buildPartyOptionGroups();
+const toOptions = (items: CatalogPartyItem[]) =>
+  items.map((item) => ({
+    id: item.id,
+    label: item.name,
+    meta: item.price === "Seasonal" ? "Seasonal" : `${formatINR(item.price)}/${item.unit}`,
+  }));
 
-export default function PartyRequestPage() {
+/**
+ * Bolds the key figure in an admin-editable note (e.g. "24-48 hours in
+ * advance", "quantity: 1kg") on its own line, matching the original design.
+ * Falls back to plain text if the owner rewrites the note without a figure.
+ */
+function Emphasized({ text }: { text: string }) {
+  const m = text.match(/(?:quantity:\s*)?\d[\d\s.,–-]*\s*(?:hours?|days?|kg|pieces?|plates?)(?:\s+in advance)?/i);
+  if (!m || m.index === undefined) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, m.index)}
+      <span className="block font-bold text-forest">{m[0].trim().replace(/(\d)\s*-\s*(\d)/, "$1–$2")}</span>
+      {text.slice(m.index + m[0].length)}
+    </>
+  );
+}
+
+/** Items, prices and notes come from the server page (live catalog), so admin edits show here. */
+export default function PartyRequestView({ party }: { party: Catalog["party"] }) {
+  const { partyGroups, itemsById } = useMemo(() => {
+    const partyGroups: MenuOptionGroup[] = [
+      { group: "Veg Party Orders", options: toOptions(party.veg) },
+      { group: "Non-Veg Party Orders", options: toOptions(party.nonVeg) },
+      { group: "Desserts", options: toOptions(party.desserts) },
+    ];
+    return { partyGroups, itemsById: new Map([...party.veg, ...party.nonVeg, ...party.desserts].map((i) => [i.id, i])) };
+  }, [party]);
+
   const [values, setValues] = useState({
     fullName: "",
     phone: "",
@@ -80,9 +113,10 @@ export default function PartyRequestPage() {
   // Derived live total price
   const totalPrice = useMemo(() => {
     return Object.entries(itemQuantities).reduce((sum, [id, qty]) => {
-      return sum + getPartyItemPrice(id) * qty;
+      const price = itemsById.get(id)?.price;
+      return sum + (typeof price === "number" ? price * qty : 0);
     }, 0);
-  }, [itemQuantities]);
+  }, [itemQuantities, itemsById]);
 
   // Derived total item count
   const totalItemCount = useMemo(() => {
@@ -95,14 +129,14 @@ export default function PartyRequestPage() {
       .map((id) => {
         const qty = itemQuantities[id] || 0;
         if (qty <= 0) return null;
-        const details = getPartyItemDetails(id);
-        const label = details ? details.label : id;
+        const details = itemsById.get(id);
+        const label = details ? details.name : id;
         const price = details ? details.price : 0;
         const subtotal = typeof price === "number" ? price * qty : 0;
         return { id, label, price, quantity: qty, subtotal };
       })
       .filter(Boolean) as { id: string; label: string; price: number | "Seasonal"; quantity: number; subtotal: number }[];
-  }, [selectedItems, itemQuantities]);
+  }, [selectedItems, itemQuantities, itemsById]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -220,8 +254,7 @@ export default function PartyRequestPage() {
                   <Clock size={15} strokeWidth={1.8} />
                 </span>
                 <p className="mt-2.5 text-xs leading-snug text-ink-secondary">
-                  Order needs to be placed <span className="block font-bold text-forest">24–48 hours in advance</span>
-                  depending on the order size.
+                  <Emphasized text={party.advanceNoticeLabel} />
                 </p>
               </div>
               <div className="rounded-xl2 border border-forest/10 bg-palegreen/70 p-4">
@@ -229,7 +262,7 @@ export default function PartyRequestPage() {
                   <Package size={15} strokeWidth={1.8} />
                 </span>
                 <p className="mt-2.5 text-xs leading-snug text-ink-secondary">
-                  Minimum order <span className="block font-bold text-forest">quantity: 1kg</span>
+                  <Emphasized text={party.minimumOrderLabel} />
                 </p>
               </div>
             </div>
@@ -279,7 +312,7 @@ export default function PartyRequestPage() {
                 groups={partyGroups}
                 selected={selectedItems}
                 onChange={handleSelectedItemsChange}
-                helperText={partyBulkOrders.minimumOrderLabel}
+                helperText={party.minimumOrderLabel}
                 showQuantities={true}
                 quantities={itemQuantities}
                 onIncrease={handleIncrease}
