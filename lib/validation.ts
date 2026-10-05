@@ -108,7 +108,7 @@ export const isFutureOrTodayDate = (value: string) => {
   return chosen.getTime() >= today.getTime();
 };
 
-/** Rejects dates further out than `maxDays` from today — matches the server-side rule. */
+/** Rejects dates further out than `maxDays` from today (matches the server-side rule). */
 export const isWithinFutureWindow = (maxDays: number) => (value: string) => {
   if (!isFutureOrTodayDate(value)) return false;
   const [day, month, year] = value.split("-").map(Number);

@@ -114,7 +114,7 @@ ok(tampered.row?.[7] === party.server.estimatedTotal, "party (signed): a tampere
 // ---------------------------------------------------------------- admin-added item (random id)
 const withNewDish: Catalog = { ...catalog, menu: { ...catalog.menu, veg: [...catalog.menu.veg, { id: "3f6c1d2e-0000-4000-8000-000000000001", name: "Millet Bowl", price: 260, vegetarian: true, description: null }] } };
 const newDish = build({ requestType: REQUEST_TYPES.INDIVIDUAL_MEAL, ...person, foodPreference: "Veg", deliveryLocation: "Udupi", selectedMealIds: ["3f6c1d2e-0000-4000-8000-000000000001"] }, withNewDish);
-ok(sheetRow(newDish, false).res.status === "error", "admin-added dish: legacy script can't know it (expected — why signing is needed)");
+ok(sheetRow(newDish, false).res.status === "error", "admin-added dish: legacy script can't know it (expected: why signing is needed)");
 const signedNew = sheetRow(newDish, true);
 ok(signedNew.res.status === "ok" && signedNew.row?.[7] === "Millet Bowl × 1" && signedNew.row?.[10] === "₹260", "admin-added dish: accepted and priced on the signed path");
 const hidden: Catalog = { ...catalog, menu: { ...catalog.menu, veg: catalog.menu.veg.filter((i) => i.id !== "veg-veg-biriyani") } };

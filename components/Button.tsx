@@ -7,7 +7,7 @@ interface BaseProps {
   children: ReactNode;
   variant?: Variant;
   className?: string;
-  /** Adds a small arrow that nudges right on hover — for primary CTAs. */
+  /** Adds a small arrow that nudges right on hover (for primary CTAs). */
   withArrow?: boolean;
 }
 

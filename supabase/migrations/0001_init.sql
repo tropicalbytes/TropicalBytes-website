@@ -1,4 +1,4 @@
--- TropicalBytes Admin Panel — Phase 1 schema
+-- TropicalBytes Admin Panel: Phase 1 schema
 -- Design rules:
 --   * Text primary keys are STABLE KEYS. Existing ids (e.g. 'weekly-veg-1') are preserved by the seed;
 --     rows created in the admin get a random key. Ids never derive from editable names.
@@ -87,7 +87,7 @@ create index menu_items_category_idx on public.menu_items (category, sort_order)
 
 -- ---------------------------------------------------------------- party / bulk
 -- Desserts are NOT duplicated here. Client confirmed (2026-09-29) that party
--- dessert pricing intentionally shares the individual dessert menu — the
+-- dessert pricing intentionally shares the individual dessert menu: the
 -- party form reads menu_items where category = 'dessert' directly, so there
 -- is exactly one row (and one price) per dessert, never two to drift apart.
 create table public.bulk_items (

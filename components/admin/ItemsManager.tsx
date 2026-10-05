@@ -29,7 +29,7 @@ type Move = (id: unknown, direction: unknown) => Promise<ActionResult>;
 
 export default function ItemsManager({ kind, tabs, items, save, remove, move }: {
   kind: Kind;
-  /** `deleteNote` is extra text shown when deleting an item from that tab. Plain data only — this is a client component. */
+  /** `deleteNote` is extra text shown when deleting an item from that tab. Plain data only (this is a client component). */
   tabs: { key: string; label: string; note?: ReactNode; deleteNote?: string }[];
   items: AdminItem[];
   save: Save; remove: Remove; move: Move;

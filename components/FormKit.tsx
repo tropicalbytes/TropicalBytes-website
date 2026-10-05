@@ -5,15 +5,15 @@ import { LucideIcon } from "lucide-react";
 import { DatePicker } from "./DatePicker";
 
 /**
- * Shared form UI building blocks — extracted from the Individual Meal
+ * Shared form UI building blocks, extracted from the Individual Meal
  * page's form (the established design reference) so every form on the
  * site (Individual Meal, Subscription wizard, Party & Bulk, Contact)
  * renders identical cards, section headers, labeled fields, icon-adorned
- * inputs, and selection pills. Purely presentational — no state or
+ * inputs, and selection pills. Purely presentational: no state or
  * validation logic lives here.
  */
 
-/** Small icon-circle + bold title + short yellow underline — used at the top of each form card/section. */
+/** Small icon-circle + bold title + short yellow underline: used at the top of each form card/section. */
 export function CardHeader({ icon: Icon, title }: { icon: LucideIcon; title: string }) {
   return (
     <div className="mb-6">

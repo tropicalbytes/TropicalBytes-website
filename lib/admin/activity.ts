@@ -41,7 +41,7 @@ const HIDDEN = new Set(["updated_at", "created_at", "uploaded_at", "id", "upload
 const MONEY = new Set(["total_price", "price", "offer_price"]);
 
 function show(field: string, v: unknown): string {
-  if (v === null || v === undefined || v === "") return "—";
+  if (v === null || v === undefined || v === "") return "-";
   if (typeof v === "boolean") return v ? "yes" : "no";
   if (MONEY.has(field) && typeof v === "number") return formatINR(v);
   return String(v);

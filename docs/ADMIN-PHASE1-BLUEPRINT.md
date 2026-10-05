@@ -1,4 +1,4 @@
-# TropicalBytes Admin Panel — Phase 1 Blueprint
+# TropicalBytes Admin Panel: Phase 1 Blueprint
 
 Audit of the delivered codebase (Next.js 14.2.35, 16 plan options, 42 menu items, 45 party items, Apps Script backend) and the build plan derived from it.
 
@@ -9,8 +9,8 @@ Audit of the delivered codebase (Next.js 14.2.35, 16 plan options, 42 menu items
 | F1 | **Party/Bulk total is client-supplied.** Server stores `sanitizeForDisplay(raw.estimatedTotal)` instead of recomputing. Subscription and Individual totals *are* recomputed. | `Code.gs` PARTY_BULK branch | Contradicts the documented security model; anyone can post any total | New `/api/enquiry` computes all totals server-side from the DB |
 | F2 | **Ids are derived from names** via `slugify("party-veg-" + name)`. | `lib/config.ts` | If the owner renames "Paneer Chilly", its id changes and the form/allowlist break | Stable text keys in DB. Seed preserves every existing id verbatim |
 | F3 | **Three form pages bundle prices into the client JS** (`"use client"` + direct config import). | `plans/subscribe`, `menu/request`, `party-request` | Cannot become dynamic without restructuring | Server `page.tsx` fetches catalog, passes it as props to a client `*Form.tsx`. UI unchanged |
-| F4 | ~~Price anomaly: `monthly-veg-2` = ₹4,560 vs. formula's ₹9,120.~~ **RESOLVED 2026-09-29.** Client confirmed in writing: Monthly Veg 1-Meal = ₹4,560 (was ₹4,800), Monthly Veg 2-Meal = ₹9,120 (was ₹4,560) — the source PDF had these two transposed. | `lib/config.ts` | Fixed | Corrected in `config.ts`, `generated-allowlist.gs`, and `seed.sql`. All 16 plan options now match the days × meals × per-meal formula exactly — zero anomalies |
-| F5 | **Party desserts are a getter over individual desserts.** | `partyBulkOrders.desserts` | **RESOLVED 2026-09-29.** Client confirmed this coupling is intentional: party desserts should keep sharing prices with individual desserts | Modeled as one `dessert` category row in `menu_items`, referenced by both surfaces — not duplicated into `bulk_items` |
+| F4 | ~~Price anomaly: `monthly-veg-2` = ₹4,560 vs. formula's ₹9,120.~~ **RESOLVED 2026-09-29.** Client confirmed in writing: Monthly Veg 1-Meal = ₹4,560 (was ₹4,800), Monthly Veg 2-Meal = ₹9,120 (was ₹4,560): the source PDF had these two transposed. | `lib/config.ts` | Fixed | Corrected in `config.ts`, `generated-allowlist.gs`, and `seed.sql`. All 16 plan options now match the days × meals × per-meal formula exactly, with zero anomalies |
+| F5 | **Party desserts are a getter over individual desserts.** | `partyBulkOrders.desserts` | **RESOLVED 2026-09-29.** Client confirmed this coupling is intentional: party desserts should keep sharing prices with individual desserts | Modeled as one `dessert` category row in `menu_items`, referenced by both surfaces, not duplicated into `bulk_items` |
 | F6 | **"Seasonal" price counts as ₹0** in totals (`Fish Curry`). | `getPartyItemPrice` | Total silently understated | `is_seasonal` flag; total labelled "excludes seasonal items" |
 | F7 | **Apps Script endpoint is public with no secret**, and rate-limit is one global bucket (30/min). | `Code.gs`, `NEXT_PUBLIC_GAS_WEB_APP_URL` | Anyone can curl it; a bot can exhaust the bucket and block real customers | Only the Next server route calls it, with a shared secret in Script Properties. Add Turnstile |
 | F8 | **Two sources of truth are already in play**: `config.ts` + hand-pasted `generated-allowlist.gs`. | `generate-gas-allowlist.ts` | Manual re-paste on every change (this is the drift risk in your brief) | Verified in parity today (no drift). Allowlist is deleted in the new design |
@@ -40,8 +40,8 @@ Customer ──> public pages (ISR, tag "catalog") ── reads ──> Supabase
 
 > **Update 2026-10-04:** applied to `tropicalbytes-production` via `0001`–`0003` + seed (see `supabase/README.md`): 9 tables, 30 policies, 39 bulk items (party desserts live in `menu_items`, F5), explicit table GRANTs (prod's default privileges grant none), `private.is_admin()`, invoker `publish_menu()`. F4 applied in `lib/config.ts`. F12 partly closed: ESLint + typecheck + `npm run test:db` (PGlite, ~100 checks) added; CI not yet. The list below is the original pre-migration test record.
 
-- `supabase/migrations/0001_init.sql` — 8 tables, RLS, audit triggers, `publish_menu()`, storage bucket policies.
-- `scripts/generate-seed-sql.ts` → `supabase/seed.sql` — 4 tiers, 16 options, 42 menu items, 45 party items, 2 settings, ids identical to the live site.
+- `supabase/migrations/0001_init.sql`: 8 tables, RLS, audit triggers, `publish_menu()`, storage bucket policies.
+- `scripts/generate-seed-sql.ts` → `supabase/seed.sql`: 4 tiers, 16 options, 42 menu items, 45 party items, 2 settings, ids identical to the live site.
 
 Executed on a real PostgreSQL 16 with stubbed Supabase `auth`/`storage` schemas (not the hosted service):
 
@@ -78,14 +78,14 @@ Responsive: admin usable at 375 px.
 
 ## 6. Questions the client must answer
 
-1. ~~`monthly-veg-2` ₹4,560 — intended, or ₹9,120 (or another figure)?~~ **Answered 2026-09-29** — see F4.
-2. ~~Party desserts: same price as individual desserts (linked) or independent?~~ **Answered 2026-09-29** — see F5.
+1. ~~`monthly-veg-2` ₹4,560 (intended, or ₹9,120 or another figure?)~~ **Answered 2026-09-29** (see F4).
+2. ~~Party desserts: same price as individual desserts (linked) or independent?~~ **Answered 2026-09-29** (see F5).
 3. Offers: display-only banners, or do they change enquiry totals? (Plan assumes display-only.)
 4. Admin emails (1–2) and whether MFA is acceptable.
 5. Who owns the Supabase and Vercel accounts long term? (Recommend the client's org.)
 
 ## 7. Deployment notes
 
-- Free Supabase projects pause after inactivity and have limited backups — check current terms. For a paying client, budget for Pro or add a keep-alive plus scheduled exports. Cached pages hide an outage until the owner tries to log in.
+- Free Supabase projects pause after inactivity and have limited backups; check current terms. For a paying client, budget for Pro or add a keep-alive plus scheduled exports. Cached pages hide an outage until the owner tries to log in.
 - Env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the `sb_publishable_…` key), `SUPABASE_SERVICE_ROLE_KEY` (server only, never `NEXT_PUBLIC_`), `GAS_WEB_APP_URL` (no longer public), `GAS_SHARED_SECRET`, `TURNSTILE_SECRET_KEY`.
 - Don't share zips containing `.env.local` (yours is gitignored and holds only the public Apps Script URL, but the habit matters).

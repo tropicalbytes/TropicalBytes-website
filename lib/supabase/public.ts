@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 // Read-only Supabase client for public catalog data, used on the server only.
-// It authenticates with the publishable key (safe to expose — RLS limits it to
+// It authenticates with the publishable key (safe to expose: RLS limits it to
 // active rows) and keeps no session. Inside Next, callers pass `cache` options
 // (lib/catalog/index.ts tags every request "catalog" so an admin save purges
 // it); outside Next (scripts) requests are simply uncached.

@@ -175,7 +175,7 @@ export default function PartyRequestView({ party }: { party: Catalog["party"] })
       fullName: values.fullName,
       phone: values.phone,
       email: values.email,
-      // IDs, not label text — the backend looks these up in its own
+      // IDs, not label text: the backend looks these up in its own
       // allowlist and never trusts free-text labels from the browser.
       selectedItemIds: selectedItems,
       itemQuantities: itemQuantities,
@@ -203,7 +203,7 @@ export default function PartyRequestView({ party }: { party: Catalog["party"] })
 
   return (
     <>
-      {/* HERO — split composition with an organic wave boundary between the
+      {/* HERO: split composition with an organic wave boundary between the
           content and the supplied catering-tray photo, per the approved
           reference. Hidden SVG clipPaths use objectBoundingBox units so the
           wave scales correctly at any container size. */}
@@ -219,7 +219,7 @@ export default function PartyRequestView({ party }: { party: Catalog["party"] })
       </svg>
 
       <section className="relative overflow-hidden bg-gradient-to-b from-palegreen to-cream">
-        {/* decorative dotted grid + leaf — same treatment as PageHero, so this
+        {/* decorative dotted grid + leaf: same treatment as PageHero, so this
             page reads as a sibling of Subscription Plans / Individual Meal / Contact */}
         <div
           className="pointer-events-none absolute right-6 top-8 hidden h-24 w-24 opacity-40 sm:block"
@@ -229,7 +229,7 @@ export default function PartyRequestView({ party }: { party: Catalog["party"] })
         <Leaf size={26} strokeWidth={1.6} className="pointer-events-none absolute left-[38%] top-10 hidden -rotate-12 text-forest/25 md:block" aria-hidden="true" />
 
         <div className="mx-auto grid max-w-content items-stretch md:grid-cols-2">
-          {/* LEFT — content */}
+          {/* LEFT: content */}
           <Reveal className="relative z-10 flex flex-col justify-center px-5 py-14 md:px-8 md:py-24">
             <span className="inline-flex w-fit items-center gap-2 rounded-full bg-palegreen py-1.5 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-widest text-forest">
               <span className="grid h-6 w-6 place-items-center rounded-full bg-white">
@@ -268,7 +268,7 @@ export default function PartyRequestView({ party }: { party: Catalog["party"] })
             </div>
           </Reveal>
 
-          {/* RIGHT — the supplied catering-tray photo, wave-clipped on the
+          {/* RIGHT: the supplied catering-tray photo, wave-clipped on the
               left with a subtle rounded outer/right corner */}
           <Reveal delay={120} className="relative h-64 sm:h-80 md:h-auto">
             <div className="absolute inset-0 [clip-path:url(#party-wave-y)] md:[clip-path:url(#party-wave-x)]">
@@ -287,7 +287,7 @@ export default function PartyRequestView({ party }: { party: Catalog["party"] })
         </div>
       </section>
 
-      {/* "Your Details" form — overlaps the hero slightly for an intentional transition */}
+      {/* "Your Details" form: overlaps the hero slightly for an intentional transition */}
       <section className="relative mx-auto max-w-content px-5 pb-16 md:px-8">
         <div className="relative z-10 mx-auto -mt-8 max-w-2xl rounded-3xl border border-sand bg-white p-6 shadow-soft sm:p-9 md:-mt-12">
           <CardHeader icon={Package} title="Order Details" />

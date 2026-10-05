@@ -46,7 +46,7 @@ body {
 
 /* ---------------------------------------------------------------------
    Scroll-reveal primitive, driven by the Reveal component toggling
-   data-revealed. Pure transform/opacity — cheap to animate.
+   data-revealed. Pure transform/opacity (cheap to animate).
 --------------------------------------------------------------------- */
 [data-reveal] {
   opacity: 0;

@@ -4,7 +4,7 @@
  *   npm run check:catalog        (reads NEXT_PUBLIC_SUPABASE_* from .env.local)
  *
  * 1. Fetches the catalog with the publishable key (anon, RLS) and requires it to
- *    match lib/config.ts field for field — the gate before public pages switch over.
+ *    match lib/config.ts field for field: the gate before public pages switch over.
  * 2. Proves the fallback triggers: an unreachable host, a wrong key, and a timeout
  *    must all throw (getCatalog() then serves lib/config.ts), and the config
  *    catalog itself must validate.

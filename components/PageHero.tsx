@@ -14,8 +14,8 @@ export interface PageHeroBadge {
  * and a food image on the right with a light decorative leaf/dot
  * treatment. Two variants share the same structure so every inner page
  * reads as one design system:
- *   - "dark"  — deep forest-green band (Subscription Plans, Contact)
- *   - "light" — off-white/pale-green band (Individual Meal, Party & Bulk)
+ *   - "dark": deep forest-green band (Subscription Plans, Contact)
+ *   - "light": off-white/pale-green band (Individual Meal, Party & Bulk)
  */
 export default function PageHero({
   variant = "light",
@@ -44,7 +44,7 @@ export default function PageHero({
   /** Small circular trust seal overlapping the image, e.g. "Fresh · Healthy · Hygienic". */
   seal?: { lines: string[] };
   children?: React.ReactNode;
-  /** Tighter vertical rhythm — smaller padding/gaps/badge scale. Defaults to false, preserving the existing hero everywhere else. */
+  /** Tighter vertical rhythm: smaller padding/gaps/badge scale. Defaults to false, preserving the existing hero everywhere else. */
   compact?: boolean;
   /** When false, drops the rounded card + shadow around the image so a
    * pre-composed asset (already matching the hero background) blends in

@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 
-// Content-Security-Policy — Phase 1 (deliberately not maximally strict yet).
+// Content-Security-Policy: Phase 1 (deliberately not maximally strict yet).
 // Allows: Next.js's own hydration scripts/styles, Google Fonts, the Google
 // Maps embed on the Contact page, picsum.photos / images.unsplash.com
 // placeholder photography, and the Google Apps Script Web App the forms
@@ -11,11 +11,11 @@
 // Next.js's App Router injects inline hydration scripts that a strict CSP
 // without a per-request nonce would block. Tightening this to a nonce-based
 // policy is the recommended next step (see google-apps-script/README.md's
-// security notes) but requires wiring a nonce through middleware — left as
+// security notes) but requires wiring a nonce through middleware; left as
 // a deliberate Phase 2 item rather than shipping a CSP that breaks the site.
 //
 // Supabase: the project origin is added to connect-src (REST/Auth/Storage
-// calls from the browser — the admin panel's sign-in) only when
+// calls from the browser, namely the admin panel's sign-in) only when
 // NEXT_PUBLIC_SUPABASE_URL is set. Server-side catalog reads aren't subject to CSP.
 const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin
@@ -42,6 +42,20 @@ const securityHeaders = [
   { key: "Content-Security-Policy", value: ContentSecurityPolicy },
 ];
 
+// Browser caching for files in /public. Next serves them with
+// `max-age=0, must-revalidate`, so every page view re-checks each logo, hero
+// photo and icon. These change only with a code deploy, so browsers may keep
+// them for a day and then refresh in the background. (/_next/static assets are
+// content-hashed and already cached for a year by Next.) To change one of
+// these files sooner, give the new version a new file name.
+const staticAssetCache = [
+  { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
+];
+const siteIcons = [
+  "favicon.ico", "favicon-16x16.png", "favicon-32x32.png", "apple-touch-icon.png",
+  "icon-192x192.png", "icon-512x512.png", "site.webmanifest",
+];
+
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
@@ -52,15 +66,24 @@ const nextConfig = {
   images: {
     // Restricted to the external hosts the site actually uses for
     // placeholder photography. Swap to local /public files and this
-    // can be trimmed further — see README's Images section.
+    // can be trimmed further (see README's Images section).
     remotePatterns: [
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "images.pexels.com" },
     ],
+    // Keep optimised images for 30 days instead of Next's 60-second default,
+    // so each photo is resized once rather than re-processed every minute.
+    minimumCacheTTL: 2592000,
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      { source: "/brand/:path*", headers: staticAssetCache },
+      ...siteIcons.map((file) => ({ source: `/${file}`, headers: staticAssetCache })),
+      // The fallback menu PDF: shorter, as it may be replaced in place.
+      { source: "/tropicalbytes-menu.pdf", headers: [{ key: "Cache-Control", value: "public, max-age=3600, stale-while-revalidate=86400" }] },
+    ];
   },
 };
 

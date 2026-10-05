@@ -42,7 +42,7 @@ export async function submitToGoogleSheets(
 /**
  * A client-side correlation id sent along with the request purely so the
  * customer's own browser/console can cross-reference a submission if
- * needed. This is NEVER the authoritative Enquiry ID — the backend
+ * needed. This is NEVER the authoritative Enquiry ID; the backend
  * generates and owns that (see `generateEnquiryId` in Code.gs).
  */
 export function newClientRequestId(prefix: string) {

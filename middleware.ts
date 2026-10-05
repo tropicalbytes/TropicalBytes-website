@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Runs ONLY on /admin routes (see matcher) — public pages are untouched.
+// Runs ONLY on /admin routes (see matcher); public pages are untouched.
 // Refreshes the Supabase session cookie and sends signed-out visitors to the
 // login page. Whether a signed-in user is actually an ADMIN is checked
 // server-side by requireAdmin() (lib/admin/auth.ts) and enforced by RLS.

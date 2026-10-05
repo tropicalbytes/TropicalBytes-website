@@ -4,8 +4,8 @@ import { buildEnquiry } from "@/lib/enquiry";
 
 // All website forms post here (lib/submitForm.ts). The server prices the
 // enquiry from the catalog, then forwards it to the Google Apps Script web
-// app — signed with GAS_SHARED_SECRET when configured, so Apps Script can
-// trust the server-computed labels/totals. Apps Script still validates the
+// app (signed with GAS_SHARED_SECRET when configured, so Apps Script can
+// trust the server-computed labels/totals). Apps Script still validates the
 // customer's contact details, rate-limits, writes the Sheet and emails.
 
 export const dynamic = "force-dynamic";

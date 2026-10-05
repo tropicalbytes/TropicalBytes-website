@@ -1,4 +1,4 @@
--- Checkpoint C verification — READ-ONLY. Run in the Supabase Dashboard SQL Editor after
+-- Checkpoint C verification: READ-ONLY. Run in the Supabase Dashboard SQL Editor after
 -- checkpoint_c_grant_admin.sql. Every row should show ok = true.
 --
 -- The first statement impersonates the owner for THIS query only (set_config/set local are

@@ -32,7 +32,7 @@ export default function PlanEditor({ tier }: { tier: PlanTierData }) {
     tier.options.some((o) => prices[o.id] !== String(o.totalPrice) || optActive[o.id] !== o.isActive);
 
   const changes = tier.options
-    .map((o) => priceChange(`${tier.name} — ${optionLabel(o)}`, o.totalPrice, prices[o.id] === "" ? null : Number(prices[o.id])))
+    .map((o) => priceChange(`${tier.name}: ${optionLabel(o)}`, o.totalPrice, prices[o.id] === "" ? null : Number(prices[o.id])))
     .filter((c): c is PriceChange => c !== null);
 
   const submit = () => {
@@ -108,7 +108,7 @@ export default function PlanEditor({ tier }: { tier: PlanTierData }) {
       <ConfirmDialog
         open={confirm !== null}
         title={`Save changes to ${tier.name}?`}
-        body={dayNum !== tier.durationDays ? `Duration changes from ${tier.durationDays} to ${dayNum} days — per-meal prices shown on the website will change too.` : "Please confirm the new prices."}
+        body={dayNum !== tier.durationDays ? `Duration changes from ${tier.durationDays} to ${dayNum} days. Per-meal prices shown on the website will change too.` : "Please confirm the new prices."}
         changes={confirm ?? []}
         confirmLabel="Save prices"
         busy={pending}

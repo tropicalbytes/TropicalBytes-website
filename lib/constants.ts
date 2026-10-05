@@ -1,5 +1,5 @@
 // ============================================================================
-// SHARED CONSTANTS — single source of truth for values that must stay in
+// SHARED CONSTANTS: single source of truth for values that must stay in
 // sync across the frontend forms, the submission payloads, and the Google
 // Apps Script backend's allowlists (see google-apps-script/generated-allowlist.gs,
 // produced from this project's config via `npm run generate:gas`).
@@ -18,7 +18,7 @@ export const MEAL_PREFERENCE_OPTIONS = ["Lunch", "Dinner", "Lunch & Dinner"] as 
 export const FOOD_PREFERENCE_OPTIONS = ["Veg", "Non-Veg"] as const;
 
 // Business rule: how far in the future a start/event date may reasonably be
-// requested. Mirrored server-side in Code.gs — keep both in sync if changed.
+// requested. Mirrored server-side in Code.gs; keep both in sync if changed.
 export const MAX_FUTURE_DATE_DAYS = 120;
 
 // Sensible max lengths for free-text fields, applied client-side for UX and

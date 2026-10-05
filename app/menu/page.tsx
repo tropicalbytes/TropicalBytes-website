@@ -17,9 +17,9 @@ export const metadata: Metadata = {
 };
 
 // Desserts are their own category (brown indicator) regardless of a given
-// dessert's own veg/non-veg dietary status — this keeps "Dessert" visually
+// dessert's own veg/non-veg dietary status; this keeps "Dessert" visually
 // distinct from "Non-Veg" elsewhere on the site. On this page specifically,
-// the client wants the last 3 desserts shown in green instead — a
+// the client wants the last 3 desserts shown in green instead: a
 // page-specific display override, kept local to this file rather than
 // touching the shared menu data (which stays "dessert" = brown everywhere
 // else, e.g. the Individual Meal page).
@@ -75,7 +75,7 @@ export default async function MenuPage() {
   ];
   return (
     <>
-      {/* HERO — the food-and-wave composition is a single pre-composed
+      {/* HERO: the food-and-wave composition is a single pre-composed
           background artwork (public/brand/menu-hero-bg.jpg); all text and
           the Download button stay real HTML overlaid on top, per spec. */}
       <section className="relative overflow-hidden">

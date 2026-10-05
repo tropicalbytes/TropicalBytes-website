@@ -1,5 +1,5 @@
 /**
- * TropicalBytes — Google Apps Script Web App backend.
+ * TropicalBytes: Google Apps Script Web App backend.
  *
  * SECURITY MODEL
  * The frontend is NOT trusted. Anyone can send a request directly to this
@@ -18,14 +18,14 @@
  *     -> generate server-controlled values (enquiryId, timestamp, price)
  *     -> sanitize every string for safe spreadsheet storage
  *     -> append row -> send email (independently try/caught)
- *     -> return a generic {status, message} — never a raw error
+ *     -> return a generic {status, message} (never a raw error)
  *
  * SETUP
  * 1. Create a new Google Sheet. Tabs are created automatically the first
  *    time each request type is submitted (with header rows).
  * 2. Extensions > Apps Script. Paste this file in as Code.gs, and add
  *    generated-allowlist.gs (from this folder) as a SECOND file in the same
- *    Apps Script project — Apps Script merges all files into one global
+ *    Apps Script project (Apps Script merges all files into one global
  *    scope, so GENERATED_ALLOWLIST is available here automatically.
  * 3. Update BUSINESS_EMAIL below.
  * 4. Deploy > New deployment > type: Web app. Execute as: Me. Access: Anyone.
@@ -91,13 +91,13 @@ const HEADERS = {
   ],
 };
 
-// Business rules (mirror lib/constants.ts on the frontend — keep in sync)
+// Business rules (mirror lib/constants.ts on the frontend; keep in sync)
 const MAX_FUTURE_DATE_DAYS = 120;
 const MAX_LENGTHS = { name: 100, address: 300, notes: 500, message: 1000, location: 300 };
 const MAX_QUANTITY = 20; // per-person meal quantity / item count sanity ceiling
 const MAX_SELECTED_ITEMS = 40; // guard against absurdly large arrays
 const MAX_REQUEST_BYTES = 20000; // ~20 KB is generous for these forms
-const MAX_REQUESTS_PER_MINUTE = 30; // coarse, global — see README limitations note
+const MAX_REQUESTS_PER_MINUTE = 30; // coarse, global (see README limitations note)
 const MAX_SERVER_TEXT = 4000; // cap on server-computed labels/totals in signed requests
 
 // ============================================================================
@@ -174,7 +174,7 @@ function doPost(e) {
     try {
       sendNotificationEmail(requestType, data);
     } catch (emailErr) {
-      // The row was already saved — an email hiccup should not fail the
+      // The row was already saved; an email hiccup should not fail the
       // whole request or hide a successfully recorded enquiry.
       console.error("Email notification failed: " + String(emailErr));
     }
@@ -328,7 +328,7 @@ function validateIdArray(v, allowlistMap, maxItems, quantitiesMap) {
  * Validates and normalizes a raw payload for a given request type.
  * Returns { ok: true, data } with a fully server-controlled record, or
  * { ok: false, errors } listing which fields failed (for internal logging
- * only — never surfaced to the caller).
+ * only; never surfaced to the caller).
  */
 function validateAndNormalize(requestType, raw, signed) {
   const errors = [];
@@ -344,7 +344,7 @@ function validateAndNormalize(requestType, raw, signed) {
 
   const base = {
     requestType: requestType,
-    submittedAt: new Date(), // server clock — never trust the browser's
+    submittedAt: new Date(), // server clock (never trust the browser's)
     fullName: fullName,
     phone: phone,
     email: email,
@@ -357,7 +357,7 @@ function validateAndNormalize(requestType, raw, signed) {
     const startDate = raw.startDate;
 
     // Subscription pricing is a fixed, client-approved table (4 plan tiers
-    // x Veg/Non-Veg x 1/2 meals) rather than a per-week formula — the
+    // x Veg/Non-Veg x 1/2 meals) rather than a per-week formula: the
     // server looks up the plan by id and trusts ITS OWN price, never one
     // computed client-side.
     if (!signed) {
@@ -606,7 +606,7 @@ function validateAndNormalize(requestType, raw, signed) {
   return { ok: false, errors: ["unhandled_request_type"] };
 }
 
-/** Non-authoritative — kept only for the business's own reference in the sheet, clearly labeled as client-supplied. */
+/** Non-authoritative: kept only for the business's own reference in the sheet, clearly labeled as client-supplied. */
 function sanitizeForDisplay(v) {
   if (v === undefined || v === null) return "";
   return String(v).slice(0, 40);
@@ -873,12 +873,12 @@ function escapeHtml(str) {
 }
 
 // ============================================================================
-// ANTI-ABUSE (coarse, global — see README for the architecture's limits)
+// ANTI-ABUSE (coarse, global: see README for the architecture's limits)
 // ============================================================================
 
 /**
  * A blunt, global request-rate ceiling. Apps Script Web Apps do not expose
- * the caller's IP address, so this cannot be scoped per-user — it protects
+ * the caller's IP address, so this cannot be scoped per-user; it protects
  * the whole endpoint against a burst of automated traffic, not any single
  * abusive client. See google-apps-script/README.md for the full limitation.
  */
@@ -887,7 +887,7 @@ function checkRateLimit() {
   try {
     lock.waitLock(2000);
   } catch (e) {
-    // Couldn't get the lock quickly — fail open rather than blocking a
+    // Couldn't get the lock quickly: fail open rather than blocking a
     // legitimate burst of simultaneous (different) customers.
     return true;
   }
@@ -914,6 +914,6 @@ function isDuplicateSubmission(requestType, data) {
 
 function logRejected(reason, details) {
   // Apps Script's execution log (Extensions > Apps Script > Executions) is
-  // the place to review these — nothing here reaches the caller.
+  // the place to review these; nothing here reaches the caller.
   console.log("Rejected request [" + reason + "]: " + JSON.stringify(details));
 }

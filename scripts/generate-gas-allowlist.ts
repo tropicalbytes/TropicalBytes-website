@@ -1,6 +1,6 @@
 /**
  * Generates google-apps-script/generated-allowlist.gs directly from this
- * project's lib/config.ts — the single source of truth for menu data.
+ * project's lib/config.ts: the single source of truth for menu data.
  *
  * Run this after any change to subscription plan pricing, the individual
  * meal menu, desserts, or party/bulk items, then copy the output file into
@@ -80,7 +80,7 @@ function buildPartyIdMap(): Record<string, string> {
   return map;
 }
 
-// Authoritative, server-validated subscription plan table — replaces the
+// Authoritative, server-validated subscription plan table. Replaces the
 // previous duration x combo formula. Each row carries its own fixed,
 // client-approved total price; the backend looks up by planOptionId
 // instead of computing a price.
@@ -101,7 +101,7 @@ subscriptionPlanOptions.forEach((p) => {
 });
 
 const output = `/**
- * AUTO-GENERATED — do not edit by hand.
+ * AUTO-GENERATED. Do not edit by hand.
  * Produced by scripts/generate-gas-allowlist.ts from lib/config.ts.
  * Re-run "npm run generate:gas" after changing menu/pricing data, then
  * re-paste this file's contents into the Apps Script project.

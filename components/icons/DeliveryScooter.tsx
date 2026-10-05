@@ -2,7 +2,7 @@
  * Custom brand illustration: a delivery rider on a scooter, in the
  * TropicalBytes green palette. Used in place of a generic bicycle icon
  * wherever the homepage represents "delivery" (How It Works step, CTA
- * section). Kept flat and minimal on purpose — no gradients/shadows, per
+ * section). Kept flat and minimal on purpose: no gradients/shadows, per
  * the brand's premium-minimal illustration guidance.
  */
 export default function DeliveryScooter({ className = "", style }: { className?: string; style?: React.CSSProperties }) {

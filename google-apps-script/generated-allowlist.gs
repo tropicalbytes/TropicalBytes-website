@@ -1,5 +1,5 @@
 /**
- * AUTO-GENERATED — do not edit by hand.
+ * AUTO-GENERATED. Do not edit by hand.
  * Produced by scripts/generate-gas-allowlist.ts from lib/config.ts.
  * Re-run "npm run generate:gas" after changing menu/pricing data, then
  * re-paste this file's contents into the Apps Script project.

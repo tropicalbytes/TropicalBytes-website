@@ -3,20 +3,20 @@ import { REQUEST_TYPES } from "./constants";
 import type { Catalog, CatalogMenuItem, CatalogPartyItem } from "./catalog/core";
 
 // ============================================================================
-// ENQUIRY PRICING — turns what a form sent (ids + quantities) into the
+// ENQUIRY PRICING: turns what a form sent (ids + quantities) into the
 // authoritative record Apps Script stores and emails: labels and totals come
 // from the catalog (Supabase, or lib/config.ts as fallback), never from the
-// browser. Pure: no network, no Next APIs — unit-tested by scripts/check-enquiry.ts.
+// browser. Pure: no network, no Next APIs (unit-tested by scripts/check-enquiry.ts).
 //
 // The output keeps the ORIGINAL request fields too (ids mapped to the old
 // allowlist names), so an Apps Script that hasn't been updated yet still
 // accepts enquiries for existing items. The updated Code.gs prefers `server`.
 // ============================================================================
 
-export const MAX_QUANTITY = 20; // per item — mirrors Code.gs
+export const MAX_QUANTITY = 20; // per item (mirrors Code.gs)
 export const MAX_SELECTED_ITEMS = 40;
 
-/** Fields Apps Script validates itself (contact/delivery details) — forwarded as-is when they are strings. */
+/** Fields Apps Script validates itself (contact/delivery details); forwarded as-is when they are strings. */
 const PASS_THROUGH = [
   "fullName", "phone", "email", "notes", "honeypot",
   "mealPreference", "foodPreference", "startDate", "address", "area", "city", "pincode",

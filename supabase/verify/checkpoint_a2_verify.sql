@@ -1,4 +1,4 @@
--- Checkpoint A.2 verification — READ-ONLY (selects only). Run after 0003_definer_functions_out_of_api.sql.
+-- Checkpoint A.2 verification: READ-ONLY (selects only). Run after 0003_definer_functions_out_of_api.sql.
 -- Every row should show ok = true.
 select * from (values
   ('is_admin() now lives in private (not exposed by the API)',

@@ -25,7 +25,8 @@ export async function uploadMenuPdf(formData: FormData): Promise<ActionResult> {
 
   const path = `${new Date().getFullYear()}/${randomUUID()}.pdf`;
   const fileName = file.name.replace(/[^\w.\- ()]/g, "_").slice(0, 120) || "menu.pdf";
-  const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, bytes, { contentType: "application/pdf", upsert: false });
+  // Each upload gets a new random path and is never overwritten, so browsers/CDN may cache it for a year.
+  const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, bytes, { contentType: "application/pdf", upsert: false, cacheControl: "31536000" });
   if (upErr) { logActionError("menu-pdf", upErr); return { ok: false, message: "Upload failed. Please try again." }; }
 
   const { data: row, error } = await supabase.from("menus")
@@ -39,7 +40,7 @@ export async function uploadMenuPdf(formData: FormData): Promise<ActionResult> {
 
   if (formData.get("publish") === "on") {
     const { error: pubErr } = await supabase.rpc("publish_menu", { p_menu_id: row.id });
-    if (pubErr) { logActionError("menu-pdf", pubErr); refresh(); return { ok: false, message: "Uploaded, but publishing failed — use Publish below." }; }
+    if (pubErr) { logActionError("menu-pdf", pubErr); refresh(); return { ok: false, message: "Uploaded, but publishing failed. Use Publish below." }; }
     refresh();
     return { ok: true, message: `Uploaded and published “${title.data}”.` };
   }

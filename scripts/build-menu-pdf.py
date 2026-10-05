@@ -4,7 +4,7 @@ live menu data in lib/config.ts (via menu-data.json), so the PDF never
 duplicates menu content by hand and can be regenerated whenever pricing or
 items change.
 
-This is intentionally simple — a clean, readable list, not the final
+This is intentionally simple: a clean, readable list, not the final
 professionally designed menu PDF the client will replace this with later.
 
 Workflow to regenerate after a menu/pricing change:
@@ -44,8 +44,8 @@ footer_style = ParagraphStyle("TBFooter", parent=styles["Normal"], fontName="Hel
 
 def veg_tag(vegetarian, category, name):
     # Desserts get their own brown category mark, kept distinct from the
-    # Non-Veg red so the two don't read as "contains meat" — matches the
-    # website's VegIndicator component. The menu PDF mirrors the website's
+    # Non-Veg red so the two don't read as "contains meat" (matches the
+    # website's VegIndicator component). The menu PDF mirrors the website's
     # Menu page, including its override for the last 3 desserts (green).
     MENU_PAGE_DESSERT_OVERRIDE = {"Tropical Gudbad": True, "Arabian Gudbad": True, "Death By Chocolate": True}
     if category == "desserts" and name not in MENU_PAGE_DESSERT_OVERRIDE:

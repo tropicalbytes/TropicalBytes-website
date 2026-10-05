@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss";
 
-// TropicalBytes design system — fresh green + yellow food-tech identity,
+// TropicalBytes design system: fresh green + yellow food-tech identity,
 // per the client-approved reference screenshot. Existing component code
 // references these same token names (forest/copper/cream/sand/ink), so
 // retheming here cascades across the whole app without touching markup.
@@ -13,17 +13,17 @@ const config: Config = {
     extend: {
       colors: {
         // Surfaces
-        cream: "#FAFBF7", // off-white — primary surface
+        cream: "#FAFBF7", // off-white (primary surface)
         white: "#FFFFFF",
         sand: "#E3E9E2", // border / hairline
         palegreen: "#EFF9E9", // supporting section backgrounds
-        // Brand green — primary identity, CTAs, strong brand areas
+        // Brand green: primary identity, CTAs, strong brand areas
         forest: {
           DEFAULT: "#087A35", // primary green
           light: "#18A84A", // secondary green
           dark: "#075B2A", // dark green (footer, strong brand areas)
         },
-        // Accent — repointed from the prior copper/terracotta palette to
+        // Accent: repointed from the prior copper/terracotta palette to
         // the approved secondary-green accent family, so every existing
         // "copper" usage (eyebrow labels, prices, small CTAs) keeps solid
         // contrast on white. True brand yellow lives in `yellow.*` below
@@ -33,7 +33,7 @@ const config: Config = {
           light: "#32C759",
           dark: "#075B2A",
         },
-        // Brand yellow — energetic accent, highlights, selected emphasis
+        // Brand yellow: energetic accent, highlights, selected emphasis
         yellow: {
           DEFAULT: "#FFD43B",
           light: "#FFF4C7",
@@ -44,7 +44,7 @@ const config: Config = {
           light: "#F3D28A",
           dark: "#C79A2E",
         },
-        // Dedicated error/validation color — kept separate from the brand
+        // Dedicated error/validation color: kept separate from the brand
         // accent (which is now green) so form errors read as errors, not
         // as a success/brand color.
         danger: {
@@ -52,7 +52,7 @@ const config: Config = {
           light: "#FBEAEA",
           dark: "#A62F2F",
         },
-        // Dessert category indicator — a warm brown, kept distinct from
+        // Dessert category indicator: a warm brown, kept distinct from
         // the Non-Veg red so the two aren't visually conflated on the
         // Menu page.
         brown: {
@@ -63,7 +63,7 @@ const config: Config = {
         "ink-secondary": "#626B63", // text secondary
       },
       fontFamily: {
-        // Modern, highly-readable sans throughout — no decorative/script
+        // Modern, highly-readable sans throughout: no decorative/script
         // fonts, per the approved design direction.
         display: ["var(--font-manrope)", "system-ui", "sans-serif"],
         body: ["var(--font-inter)", "system-ui", "sans-serif"],

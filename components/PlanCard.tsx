@@ -11,7 +11,7 @@ const TIER_ICON: Record<string, typeof Rocket> = {
 };
 
 /**
- * A subscription tier card — shows the tier name/tagline plus its cheapest
+ * A subscription tier card: shows the tier name/tagline plus its cheapest
  * per-meal price so the customer can compare before continuing to the
  * guided wizard. Full price breakdown lives on /plans/subscribe.
  */

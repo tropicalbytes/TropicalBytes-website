@@ -4,7 +4,7 @@ import { supabasePublicConfig } from "./public";
 
 /**
  * Supabase client bound to the signed-in user's session cookie, for admin
- * server components and server actions. Uses only the publishable key — every
+ * server components and server actions. Uses only the publishable key: every
  * read/write runs as the user, so RLS (private.is_admin()) is what grants
  * access. The service-role key is never used here.
  */

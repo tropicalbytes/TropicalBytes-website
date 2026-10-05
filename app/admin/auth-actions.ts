@@ -12,7 +12,7 @@ const loginSchema = z.object({
   next: z.string().optional(),
 });
 
-/** Only same-site /admin paths — never an open redirect. */
+/** Only same-site /admin paths; never an open redirect. */
 function safeNext(next: string | undefined) {
   return next && /^\/admin(\/[A-Za-z0-9\-/]*)?$/.test(next) && next !== "/admin/login" ? next : "/admin";
 }
@@ -29,7 +29,7 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
   if (error || !data.user) {
-    // Same message for unknown email and wrong password — don't reveal which accounts exist.
+    // Same message for unknown email and wrong password: don't reveal which accounts exist.
     return { error: error?.status === 429 ? "Too many attempts. Wait a minute and try again." : "Incorrect email or password.", email };
   }
 

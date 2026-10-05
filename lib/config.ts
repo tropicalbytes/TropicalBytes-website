@@ -30,7 +30,7 @@ export const business = {
   },
 };
 
-// Primary navigation — the four commercial areas plus Home, Menu, and
+// Primary navigation: the four commercial areas plus Home, Menu, and
 // Contact. How It Works is a homepage section (see id="how-it-works" on Home).
 export const nav = [
   { label: "Home", href: "/" },
@@ -55,11 +55,11 @@ export function formatINR(n: number): string {
 export type FoodType = "Veg" | "Non-Veg";
 
 // ----------------------------------------------------------------------------
-// SUBSCRIPTION MEAL PLANS — four fixed tiers, each with 4 priced options
+// SUBSCRIPTION MEAL PLANS: four fixed tiers, each with 4 priced options
 // (Veg/Non-Veg × 1 Meal/2 Meals). Prices are flat, client-approved figures
 // from the PDF. Every total equals days × meals × perMealPrice (Monthly Veg
 // 1-Meal/2-Meal were transposed in the original data; corrected per the
-// client, finalized 2026-10-04 — scripts/generate-seed-sql.ts checks this).
+// client, finalized 2026-10-04; scripts/generate-seed-sql.ts checks this).
 // ----------------------------------------------------------------------------
 
 export interface SubscriptionTier {
@@ -118,7 +118,7 @@ export function planOptionsForTier(tierId: string): SubscriptionPlanOption[] {
 }
 
 // ----------------------------------------------------------------------------
-// INDIVIDUAL MEAL MENU — Veg Meals / Non-Veg Meals / Desserts, exact names
+// INDIVIDUAL MEAL MENU: Veg Meals / Non-Veg Meals / Desserts, exact names
 // and prices from the approved PDF. Obvious source typos corrected per the
 // client's explicit instruction ("Grilled Panner Salad" -> "Grilled Paneer
 // Salad", "BBQ Chicken Salald" -> "BBQ Chicken Salad").
@@ -127,7 +127,7 @@ export function planOptionsForTier(tierId: string): SubscriptionPlanOption[] {
 export interface MenuItem {
   name: string;
   price: number;
-  /** True for vegetarian, false for non-vegetarian — per the approved PDF's own veg/non-veg markers on each item (including desserts). */
+  /** True for vegetarian, false for non-vegetarian (per the approved PDF's own veg/non-veg markers on each item, including desserts). */
   vegetarian: boolean;
 }
 
@@ -183,8 +183,8 @@ export const individualMenu = {
 };
 
 // ----------------------------------------------------------------------------
-// PARTY / BULK ORDERS — Veg / Non-Veg priced per kg (exact PDF figures),
-// plus Desserts priced per piece (reusing the individual dessert menu —
+// PARTY / BULK ORDERS: Veg / Non-Veg priced per kg (exact PDF figures),
+// plus Desserts priced per piece (reusing the individual dessert menu;
 // the source PDF pages didn't include separate bulk/kg dessert pricing, so
 // these are offered at their individual per-piece price; confirm with the
 // client whether a bulk dessert price list exists before publishing).
@@ -248,7 +248,7 @@ export const partyBulkOrders = {
 };
 
 // ----------------------------------------------------------------------------
-// DERIVED CATALOG HELPERS — used by the searchable multi-select components
+// DERIVED CATALOG HELPERS: used by the searchable multi-select components
 // on the Subscribe wizard, Individual Meal page, and Party/Bulk form.
 // ----------------------------------------------------------------------------
 
@@ -280,7 +280,7 @@ export function buildMealOptionGroups(foodType: FoodType): MenuOptionGroup[] {
   ];
 }
 
-/** Grouped, searchable Desserts options — food-type independent. */
+/** Grouped, searchable Desserts options (food-type independent). */
 export function buildAddOnOptionGroups(): MenuOptionGroup[] {
   return [
     {

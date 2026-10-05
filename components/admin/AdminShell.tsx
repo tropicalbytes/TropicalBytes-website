@@ -47,7 +47,7 @@ export default function AdminShell({ email, banner, children }: { email: string;
       <a href="/" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 text-sm text-ink-secondary hover:text-forest">
         <ExternalLink size={15} /> View website
       </a>
-      <Link href="/admin/account" className="block truncate px-3 text-xs text-ink-secondary hover:text-forest" title={`${email} — account settings`}>{email}</Link>
+      <Link href="/admin/account" className="block truncate px-3 text-xs text-ink-secondary hover:text-forest" title={`${email}: account settings`}>{email}</Link>
       <form action={signOut}>
         <button type="submit" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-danger hover:bg-danger-light">
           <LogOut size={16} /> Sign out

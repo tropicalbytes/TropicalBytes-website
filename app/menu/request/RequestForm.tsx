@@ -335,7 +335,7 @@ export default function RequestForm({ menu }: { menu: Catalog["menu"] }) {
 
   return (
     <div className="mx-auto max-w-5xl">
-      {/* Category tabs — Veg Meal / Non-Veg Meal / Desserts, per the approved menu structure */}
+      {/* Category tabs: Veg Meal / Non-Veg Meal / Desserts, per the approved menu structure */}
       <div className="mb-8 flex flex-wrap gap-3">
         {CATEGORIES.map((c) => (
           <button
@@ -364,7 +364,7 @@ export default function RequestForm({ menu }: { menu: Catalog["menu"] }) {
         />
 
         <div className="grid gap-6 md:grid-cols-2 md:gap-8 items-start">
-          {/* LEFT — meal / dessert selection + Dedicated Total Price Card */}
+          {/* LEFT: meal / dessert selection + Dedicated Total Price Card */}
           <div className="space-y-6">
             <div className={FORM_CARD_CLASS}>
               <CardHeader
@@ -446,7 +446,7 @@ export default function RequestForm({ menu }: { menu: Catalog["menu"] }) {
             </div>
           </div>
 
-          {/* RIGHT — customer + delivery details */}
+          {/* RIGHT: customer + delivery details */}
           <div className={FORM_CARD_CLASS}>
             <CardHeader icon={FileText} title="Your Details" />
 

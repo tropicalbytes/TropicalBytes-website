@@ -1,4 +1,4 @@
--- Checkpoint B verification — READ-ONLY (selects only). Run in the Supabase Dashboard SQL Editor
+-- Checkpoint B verification: READ-ONLY (selects only). Run in the Supabase Dashboard SQL Editor
 -- after seed.sql. Every row should show ok = true.
 select * from (values
   ('4 plan tiers',            (select count(*) = 4  from public.plan_tiers),    (select count(*)::text from public.plan_tiers)),

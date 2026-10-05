@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, ReactNode } from "react";
 
 /**
  * Lightweight scroll-reveal wrapper. Adds data-reveal / data-reveal="true"
- * attributes that app/globals.css animates with transform + opacity only —
+ * attributes that app/globals.css animates with transform + opacity only:
  * no animation library, and prefers-reduced-motion is respected globally.
  */
 export default function Reveal({

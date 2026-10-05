@@ -9,7 +9,7 @@ import {
 } from "../config";
 
 // ============================================================================
-// CATALOG — the menu/pricing data the public site renders, from either
+// CATALOG: the menu/pricing data the public site renders, from either
 // Supabase (source of truth once the admin panel ships) or lib/config.ts
 // (fallback). Both produce the same shape and the same stable ids, so pages
 // never need to know which one they got.
@@ -24,7 +24,7 @@ export interface CatalogTier {
   id: string;
   name: string;
   durationDays: number;
-  /** e.g. "6 Days" — same text lib/config.ts uses. */
+  /** e.g. "6 Days" (same text lib/config.ts uses). */
   durationLabel: string;
   tagline: string;
   isPopular: boolean;
@@ -127,7 +127,7 @@ async function select(client: SupabaseClient, table: string, columns: string): P
 
 /**
  * Reads the active catalog through RLS (anon/publishable key) and validates it.
- * Throws if Supabase is unreachable or the data is incomplete — the caller
+ * Throws if Supabase is unreachable or the data is incomplete: the caller
  * falls back to catalogFromConfig() rather than render a half-empty site.
  */
 export async function fetchCatalog(client: SupabaseClient): Promise<Catalog> {

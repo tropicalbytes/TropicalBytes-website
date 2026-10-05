@@ -1,14 +1,14 @@
-# Supabase — TropicalBytes admin data
+# Supabase: TropicalBytes admin data
 
 Project: `tropicalbytes-production` (ref `bftbqypdbbcqmxsaisxx`, region ap-northeast-2, Postgres 17, Free plan).
 Every change below was run by hand in **Dashboard → SQL Editor**, one checkpoint at a time, and verified
 with the matching read-only query in `verify/` (every row must show `ok = true`). Because the SQL Editor
-was used rather than the CLI, Supabase's own migration history is empty — the files here are the record.
+was used rather than the CLI, Supabase's own migration history is empty; the files here are the record.
 
 | Order | Checkpoint | File | What it does | Verify with | Status |
 |---|---|---|---|---|---|
 | 1 | A | `migrations/0001_init.sql` | 9 tables, RLS (29 policies), audit triggers, `publish_menu()`, explicit table privileges, `menus` storage bucket | `verify/checkpoint_a_verify.sql` | ✅ 2026-10-04 |
-| 2 | A.1 | `migrations/0002_lock_trigger_functions.sql` | Trigger functions no longer callable over the API | — (advisor) | ✅ 2026-10-04 |
+| 2 | A.1 | `migrations/0002_lock_trigger_functions.sql` | Trigger functions no longer callable over the API | - (advisor) | ✅ 2026-10-04 |
 | 3 | B | `seed.sql` | Today's catalog: 4 tiers, 16 plan options, 42 menu items, 39 bulk items, 2 settings | `verify/checkpoint_b_verify.sql` | ✅ 2026-10-04 |
 | 4 | A.2 | `migrations/0003_definer_functions_out_of_api.sql` | `is_admin()` → `private` schema; `publish_menu()` runs as the caller | `verify/checkpoint_a2_verify.sql` | ✅ 2026-10-04 |
 | 5 | C | Dashboard user + `admin/checkpoint_c_grant_admin.sql` | Owner login + admin row | `verify/checkpoint_c_verify.sql` | ✅ 2026-10-04 |
@@ -31,7 +31,7 @@ email. The `menus` bucket is public-read by URL, admin-only write, PDF-only, 5 M
 - Detect admin status with `select … from admins` (RLS returns the caller's own row only to admins);
   `rpc('is_admin')` does not exist.
 - Publish a menu with `rpc('publish_menu', { p_menu_id })`.
-- Party desserts are the `menu_items` rows with `category = 'dessert'` — there are none in `bulk_items`.
+- Party desserts are the `menu_items` rows with `category = 'dessert'` (there are none in `bulk_items`).
 - Prices are integer rupees; per-meal price and delivery labels are derived in code, not stored.
 
 ## Tests
@@ -42,4 +42,4 @@ price/id drift against `google-apps-script/generated-allowlist.gs`.
 
 ## Rules (from CLAUDE.md)
 No `drop`/`truncate`/unscoped `delete` against production. Show SQL before running it. New schema
-changes go in a new numbered migration — never edit an applied one.
+changes go in a new numbered migration; never edit an applied one.

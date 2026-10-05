@@ -53,7 +53,7 @@ export default async function DashboardPage() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-ink">Current menu PDF</p>
           <p className="truncate text-xs text-ink-secondary">
-            {currentMenu ? <>{currentMenu.title}{currentMenu.published_at && <> · published {formatIST(currentMenu.published_at)}</>}</> : "None published yet — upload one"}
+            {currentMenu ? <>{currentMenu.title}{currentMenu.published_at && <> · published {formatIST(currentMenu.published_at)}</>}</> : "None published yet. Upload one"}
           </p>
         </div>
         <ArrowRight size={16} className="text-ink-secondary" />

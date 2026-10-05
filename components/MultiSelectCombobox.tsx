@@ -17,7 +17,7 @@ interface MultiSelectComboboxProps {
 }
 
 /**
- * Premium searchable multi-select — replaces native <select multiple> and
+ * Premium searchable multi-select: replaces native <select multiple> and
  * dropdown menus everywhere the menu is large. Supports search, grouped
  * checkboxes, selected-item chips, remove/clear-all, and keyboard use
  * (Escape to close, Tab through checkboxes, Enter/Space to toggle).

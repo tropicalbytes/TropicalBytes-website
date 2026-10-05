@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle2, Loader2, X } from "lucide-react";
 import { formatINR } from "@/lib/config";
 import type { ActionResult, PriceChange } from "@/lib/admin/shared";
 
-// Small, dense building blocks for the admin panel — same tokens as the
+// Small, dense building blocks for the admin panel: same tokens as the
 // public site (forest/sand/cream/ink), tuned for data entry on a phone.
 
 export function PageHeader({ title, description, action }: { title: string; description?: ReactNode; action?: ReactNode }) {

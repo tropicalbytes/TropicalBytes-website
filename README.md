@@ -38,6 +38,6 @@ Requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (
 
 Public pages read the same data (`lib/catalog`, falling back to `lib/config.ts` if Supabase is down) and
 refresh within seconds of an admin save. Enquiries go through the site's `/api/enquiry` route, which
-prices them from the catalog and forwards them to Apps Script with `GAS_SHARED_SECRET` — see
-`google-apps-script/README.md` §6 for the one-time Apps Script setup. See `supabase/README.md`,
+prices them from the catalog and forwards them to Apps Script with `GAS_SHARED_SECRET` (see
+`google-apps-script/README.md` §6 for the one-time Apps Script setup). See `supabase/README.md`,
 `docs/ADMIN-PHASE1-BLUEPRINT.md` and `docs/AUDIT-SUPABASE-INTEGRATION.md`.

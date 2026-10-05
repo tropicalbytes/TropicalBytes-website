@@ -8,7 +8,7 @@ const STYLES: Record<FoodIndicatorType, { border: string; dot: string; text: str
 
 /**
  * The standard Indian veg/non-veg mark (a colored square with a dot),
- * paired with a visible text label — not color alone — so the
+ * paired with a visible text label (not color alone) so the
  * distinction reads for colorblind users too, per accessibility
  * requirements. Desserts get their own brown category mark, kept
  * distinct from Non-Veg red so the two read as different things at a

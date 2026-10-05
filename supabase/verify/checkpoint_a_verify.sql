@@ -1,4 +1,4 @@
--- Checkpoint A verification — READ-ONLY (selects only). Run in the Supabase Dashboard SQL Editor
+-- Checkpoint A verification: READ-ONLY (selects only). Run in the Supabase Dashboard SQL Editor
 -- after 0001_init.sql. Every row should show ok = true.
 with
   t as (select c.relname, c.relrowsecurity from pg_class c

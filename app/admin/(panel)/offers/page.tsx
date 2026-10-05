@@ -23,7 +23,7 @@ export default async function OffersPage() {
     <>
       <PageHeader
         title="Offers"
-        description="Promotional offers. An offer is live on the website while it's switched on and today (India time) is between its start and end dates — leave a date empty for no limit. Offers are for display; they don't change enquiry prices."
+        description="Promotional offers. An offer is live on the website while it's switched on and today (India time) is between its start and end dates (leave a date empty for no limit). Offers are for display; they don't change enquiry prices."
       />
       <OffersManager offers={offers} today={todayIST()} />
     </>

@@ -1,4 +1,4 @@
--- Checkpoint A.2 — clears the remaining Supabase security advisor warnings (lints 0028/0029)
+-- Checkpoint A.2: clears the remaining Supabase security advisor warnings (lints 0028/0029)
 -- left after 0002. No tables, rows, or data are changed.
 --
 -- 1. is_admin() moves from public (exposed as /rest/v1/rpc/is_admin) to a new `private` schema,

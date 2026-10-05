@@ -19,7 +19,7 @@ export default async function AccountPage() {
         <Card className="bg-palegreen/50">
           <h2 className="font-display font-bold text-ink">Keeping the account safe</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-secondary">
-            <li>Use a password you don&apos;t use anywhere else — a password manager makes this easy.</li>
+            <li>Use a password you don&apos;t use anywhere else. A password manager makes this easy.</li>
             <li>Turn on 2-Step Verification for this email account in Google.</li>
             <li>The admin panel never emails you a sign-in or reset link. Treat any such email as fake.</li>
           </ul>

@@ -84,8 +84,8 @@ export const offerSchema = z
   });
 
 export const SETTINGS = {
-  party_minimum_order_label: "Party orders — minimum order note",
-  party_advance_notice_label: "Party orders — advance notice note",
+  party_minimum_order_label: "Party orders: minimum order note",
+  party_advance_notice_label: "Party orders: advance notice note",
 } as const;
 export const settingSchema = z.object({
   key: z.enum(Object.keys(SETTINGS) as [keyof typeof SETTINGS, ...(keyof typeof SETTINGS)[]]),

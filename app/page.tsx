@@ -126,7 +126,7 @@ export default function HomePage() {
             </Reveal>
           </div>
 
-          {/* RIGHT — High-resolution hero composition matching the approved design reference */}
+          {/* RIGHT: High-resolution hero composition matching the approved design reference */}
           <Reveal delay={180} className="flex justify-center lg:justify-end">
             <div className="relative aspect-[3/2] w-full max-w-xl overflow-hidden rounded-3xl shadow-soft sm:rounded-[2rem] lg:max-w-2xl xl:max-w-[42rem]">
               <Image
@@ -170,7 +170,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* LIVE OFFERS — managed in /admin → Offers; renders nothing when none are live */}
+      {/* LIVE OFFERS: managed in /admin → Offers; renders nothing when none are live */}
       <OffersBanner className="pt-12" />
 
       {/* MEAL PLANS */}
@@ -283,7 +283,7 @@ export default function HomePage() {
             </div>
           </Reveal>
 
-          {/* TropicalBytes delivery rider — Udupi to Manipal route, feathered
+          {/* TropicalBytes delivery rider: Udupi to Manipal route, feathered
               to blend directly into the section's yellow, no card/frame. */}
           <Reveal delay={120} className="relative -mx-5 h-56 sm:h-72 md:mx-0 md:h-[26rem]">
             <Image

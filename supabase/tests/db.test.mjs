@@ -1,4 +1,4 @@
-// Database test suite — runs every migration, the seed and the admin grant on a throwaway
+// Database test suite: runs every migration, the seed and the admin grant on a throwaway
 // in-memory PostgreSQL (PGlite), in the same order they were applied to tropicalbytes-production,
 // then exercises RLS/privileges as anon, a signed-in non-admin, and the owner.
 //
@@ -6,7 +6,7 @@
 //
 // Never connects to Supabase. The `auth`/`storage` schemas are minimal stubs, and the default
 // privileges below reproduce what tropicalbytes-production actually grants on new objects
-// (checked read-only 2026-10-04) — which is what caught the missing GRANTs in 0001_init.sql.
+// (checked read-only 2026-10-04), which is what caught the missing GRANTs in 0001_init.sql.
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import path from "node:path";
