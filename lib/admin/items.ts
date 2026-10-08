@@ -9,6 +9,21 @@ export async function nextSortOrder(supabase: SupabaseClient, table: Table, cate
   return (data?.[0]?.sort_order ?? 0) + 10;
 }
 
+/**
+ * Category + position columns for a save. New items go to the end of their
+ * category; an edited item moved to another category goes to the end of that
+ * one. Unchanged category: nothing to write.
+ */
+export async function placement(supabase: SupabaseClient, table: Table, id: string | undefined, category: string): Promise<{ category?: string; sort_order?: number; moved: boolean }> {
+  if (id) {
+    const { data } = await supabase.from(table).select("category").eq("id", id).maybeSingle();
+    if (!data || data.category === category) return { moved: false };
+  }
+  return { category, sort_order: await nextSortOrder(supabase, table, category), moved: !!id };
+}
+
+export const CATEGORY_LABELS: Record<string, string> = { veg: "Veg", non_veg: "Non-Veg", dessert: "Desserts" };
+
 /** Swaps an item with its neighbour in the same category. Returns an error message or null. */
 export async function moveItem(supabase: SupabaseClient, table: Table, id: string, direction: "up" | "down"): Promise<string | null> {
   const { data: item } = await supabase.from(table).select("category").eq("id", id).maybeSingle();

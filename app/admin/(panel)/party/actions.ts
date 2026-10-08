@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin/auth";
-import { moveItem, nextSortOrder } from "@/lib/admin/items";
+import { CATEGORY_LABELS, moveItem, placement } from "@/lib/admin/items";
 import { logActionError, revalidateAfterCatalogWrite } from "@/lib/admin/server";
 import { bulkItemSchema, firstIssue, friendlyDbError, type ActionResult } from "@/lib/admin/shared";
 
@@ -15,12 +15,14 @@ export async function saveBulkItem(input: unknown): Promise<ActionResult> {
   const v = parsed.data;
   const row = { name: v.name, description: v.description, unit: v.unit, price: v.price, is_seasonal: v.seasonal, is_active: v.isActive };
 
+  const { moved, ...place } = await placement(supabase, "bulk_items", v.id, v.category);
   const { error } = v.id
-    ? await supabase.from("bulk_items").update(row).eq("id", v.id)
-    : await supabase.from("bulk_items").insert({ ...row, category: v.category, sort_order: await nextSortOrder(supabase, "bulk_items", v.category) });
+    ? await supabase.from("bulk_items").update({ ...row, ...place }).eq("id", v.id)
+    : await supabase.from("bulk_items").insert({ ...row, ...place });
   if (error) { logActionError("party", error); return { ok: false, message: friendlyDbError(error) }; }
   revalidateAfterCatalogWrite(PATH);
-  return { ok: true, message: v.id ? `Saved ${v.name}.` : `Added ${v.name}.` };
+  const section = CATEGORY_LABELS[v.category];
+  return { ok: true, message: !v.id ? `Added ${v.name} to ${section}.` : moved ? `Saved ${v.name} and moved it to ${section}.` : `Saved ${v.name}.` };
 }
 
 export async function deleteBulkItem(id: unknown): Promise<ActionResult> {

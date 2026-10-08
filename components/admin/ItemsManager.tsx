@@ -74,9 +74,9 @@ export default function ItemsManager({ kind, tabs, items, save, remove, move }: 
       </div>
 
       {editing === "new" && (
-        <ItemForm kind={kind} category={tab} pending={pending}
+        <ItemForm kind={kind} category={tab} categories={tabs} pending={pending}
           onCancel={() => setEditing(null)}
-          onSave={(input) => run(() => save(input), () => setEditing(null))} />
+          onSave={(input) => run(() => save(input), () => { setEditing(null); setTab(input.category); })} />
       )}
 
       <Card className="p-0 sm:p-0">
@@ -86,9 +86,9 @@ export default function ItemsManager({ kind, tabs, items, save, remove, move }: 
             <li key={item.id} className={item.isActive ? "" : "bg-cream"}>
               {editing === item.id ? (
                 <div className="p-3 sm:p-4">
-                  <ItemForm kind={kind} category={tab} item={item} pending={pending}
+                  <ItemForm kind={kind} category={tab} categories={tabs} item={item} pending={pending}
                     onCancel={() => setEditing(null)}
-                    onSave={(input) => run(() => save(input), () => setEditing(null))} />
+                    onSave={(input) => run(() => save(input), () => { setEditing(null); setTab(input.category); })} />
                 </div>
               ) : (
                 <div className="flex items-center gap-3 px-3 py-3 sm:px-4">
@@ -139,15 +139,17 @@ export default function ItemsManager({ kind, tabs, items, save, remove, move }: 
   );
 }
 
-function ItemForm({ kind, category, item, pending, onSave, onCancel }: {
-  kind: Kind; category: string; item?: AdminItem; pending: boolean;
-  onSave: (input: unknown) => void; onCancel: () => void;
+function ItemForm({ kind, category: initialCategory, categories, item, pending, onSave, onCancel }: {
+  kind: Kind; category: string; categories: { key: string; label: string }[]; item?: AdminItem; pending: boolean;
+  onSave: (input: { category: string }) => void; onCancel: () => void;
 }) {
+  const [category, setCategory] = useState(item?.category ?? initialCategory);
   const [name, setName] = useState(item?.name ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
   const [price, setPrice] = useState(item?.price != null ? String(item.price) : "");
   const [active, setActive] = useState(item?.isActive ?? true);
-  const [vegetarian, setVegetarian] = useState(item?.vegetarian ?? category !== "non_veg");
+  // Only desserts use this toggle: the Veg and Non-Veg sections set the marker themselves.
+  const [vegetarian, setVegetarian] = useState(item?.vegetarian ?? true);
   const [unit, setUnit] = useState<"kg" | "piece">(item?.unit ?? "kg");
   const [seasonal, setSeasonal] = useState(item?.seasonal ?? false);
   const [confirm, setConfirm] = useState<PriceChange[] | null>(null);
@@ -167,6 +169,22 @@ function ItemForm({ kind, category, item, pending, onSave, onCancel }: {
   return (
     <div className={item ? "" : "mb-4 rounded-2xl border border-forest/30 bg-white p-4 shadow-sm"}>
       {!item && <p className="mb-3 font-display font-bold text-ink">New item</p>}
+      <div className="mb-3">
+        <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-secondary">Section</span>
+        <div role="radiogroup" aria-label="Section" className="inline-flex flex-wrap gap-1 rounded-xl border border-sand bg-cream p-1">
+          {categories.map((c) => (
+            <button key={c.key} type="button" role="radio" aria-checked={category === c.key} onClick={() => setCategory(c.key)}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${category === c.key ? "bg-forest text-white" : "text-ink hover:bg-palegreen"}`}>
+              {c.key === "veg" && <VegIndicator type="veg" />}
+              {c.key === "non_veg" && <VegIndicator type="non-veg" />}
+              {c.label}
+            </button>
+          ))}
+        </div>
+        {item && category !== item.category && (
+          <p className="mt-1.5 text-xs text-ink-secondary">Saving moves it to {categories.find((c) => c.key === category)?.label}, at the end of the list.</p>
+        )}
+      </div>
       <div className="grid gap-3 sm:grid-cols-[3fr_2fr]">
         <Label text="Name"><TextInput value={name} maxLength={120} onChange={(e) => setName(e.target.value)} autoFocus={!item} /></Label>
         <div className="grid grid-cols-[1fr_auto] gap-2">
@@ -188,7 +206,7 @@ function ItemForm({ kind, category, item, pending, onSave, onCancel }: {
       </Label>
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
         <Toggle checked={active} onChange={setActive} label="Show on website" />
-        {kind === "menu" && <Toggle checked={vegetarian} onChange={setVegetarian} label="Vegetarian" />}
+        {kind === "menu" && category === "dessert" && <Toggle checked={vegetarian} onChange={setVegetarian} label="Vegetarian (green marker)" />}
         {kind === "bulk" && <Toggle checked={seasonal} onChange={setSeasonal} label="Seasonal (price on request)" />}
       </div>
       <div className="mt-4 flex justify-end gap-2">

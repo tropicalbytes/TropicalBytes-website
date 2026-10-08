@@ -41,15 +41,18 @@ export const planOptionSchema = z.object({
 });
 export const planTierUpdateSchema = z.object({ tier: tierSchema, options: z.array(planOptionSchema).max(8) });
 
-export const menuItemSchema = z.object({
-  id: z.string().min(1).optional(),
-  category: z.enum(["veg", "non_veg", "dessert"]),
-  name: name(120),
-  description: optionalText(300),
-  price: rupees(100000),
-  vegetarian: z.boolean(),
-  isActive: z.boolean(),
-});
+export const menuItemSchema = z
+  .object({
+    id: z.string().min(1).optional(),
+    category: z.enum(["veg", "non_veg", "dessert"]),
+    name: name(120),
+    description: optionalText(300),
+    price: rupees(100000),
+    vegetarian: z.boolean(),
+    isActive: z.boolean(),
+  })
+  // The Veg and Non-Veg sections decide the veg marker; desserts carry their own.
+  .transform((v) => ({ ...v, vegetarian: v.category === "dessert" ? v.vegetarian : v.category === "veg" }));
 
 export const bulkItemSchema = z
   .object({
