@@ -14,8 +14,20 @@ const STYLES: Record<FoodIndicatorType, { border: string; dot: string; text: str
  * distinct from Non-Veg red so the two read as different things at a
  * glance, rather than "Dessert" implying "contains meat".
  */
-export default function VegIndicator({ type }: { type: FoodIndicatorType }) {
+export default function VegIndicator({ type, markOnly = false }: { type: FoodIndicatorType; markOnly?: boolean }) {
   const s = STYLES[type];
+  if (markOnly) {
+    // Just the mark, on a white tile so it stays visible on any background
+    // (e.g. a selected green button). Use only next to text that already
+    // names the category, which is why it's hidden from screen readers.
+    return (
+      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-white" aria-hidden="true">
+        <span className={`grid h-3.5 w-3.5 place-items-center rounded-[3px] border ${s.border}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+        </span>
+      </span>
+    );
+  }
   return (
     <span className="inline-flex items-center gap-1.5" role="img" aria-label={s.aria}>
       <span className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border ${s.border}`} aria-hidden="true">

@@ -175,8 +175,7 @@ function ItemForm({ kind, category: initialCategory, categories, item, pending, 
           {categories.map((c) => (
             <button key={c.key} type="button" role="radio" aria-checked={category === c.key} onClick={() => setCategory(c.key)}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${category === c.key ? "bg-forest text-white" : "text-ink hover:bg-palegreen"}`}>
-              {c.key === "veg" && <VegIndicator type="veg" />}
-              {c.key === "non_veg" && <VegIndicator type="non-veg" />}
+              <VegIndicator type={c.key === "veg" ? "veg" : c.key === "non_veg" ? "non-veg" : "dessert"} markOnly />
               {c.label}
             </button>
           ))}
