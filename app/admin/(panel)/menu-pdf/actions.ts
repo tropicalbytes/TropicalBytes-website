@@ -1,15 +1,34 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { PDFDocument } from "pdf-lib";
 import { z } from "zod";
 import { requireAdmin, type AdminContext } from "@/lib/admin/auth";
 import { logActionError, revalidateAfterCatalogWrite } from "@/lib/admin/server";
-import { MAX_MENU_PDF_BYTES, firstIssue, friendlyDbError, type ActionResult } from "@/lib/admin/shared";
+import { MAX_MENU_PDF_BYTES, MAX_MENU_PDF_MB, firstIssue, friendlyDbError, type ActionResult } from "@/lib/admin/shared";
 
 const BUCKET = "menus";
 const PATH = "/admin/menu-pdf";
 /** Also refreshes /menu.pdf, which serves the current menu. */
 const refresh = () => revalidateAfterCatalogWrite(PATH);
+
+/**
+ * Writes the admin title into the PDF's own Title property, which browsers show
+ * in the tab instead of whatever the design tool left there (e.g. "Page one
+ * design directions"). Pages are untouched. If the file can't be processed
+ * (e.g. it's encrypted), the original bytes are used unchanged.
+ */
+async function withTitle(bytes: Uint8Array, title: string): Promise<Uint8Array> {
+  try {
+    const doc = await PDFDocument.load(bytes, { updateMetadata: false });
+    doc.setTitle(title, { showInWindowTitleBar: true });
+    const out = await doc.save();
+    return out.length <= MAX_MENU_PDF_BYTES ? out : bytes;
+  } catch (error) {
+    logActionError("menu-pdf", error);
+    return bytes;
+  }
+}
 
 /**
  * After a publish, deletes menus that were published before and are no longer
@@ -34,11 +53,12 @@ export async function uploadMenuPdf(formData: FormData): Promise<ActionResult> {
   if (!title.success) return { ok: false, message: firstIssue(title.error) };
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return { ok: false, message: "Choose a PDF file to upload." };
-  if (file.size > MAX_MENU_PDF_BYTES) return { ok: false, message: "That file is over 5 MB. Please export a smaller PDF." };
+  if (file.size > MAX_MENU_PDF_BYTES) return { ok: false, message: `That file is over ${MAX_MENU_PDF_MB} MB. Please export a smaller PDF.` };
 
   // Check the file really is a PDF (its first bytes), not just named .pdf.
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  if (new TextDecoder().decode(bytes.slice(0, 5)) !== "%PDF-") return { ok: false, message: "That file isn't a PDF." };
+  const original = new Uint8Array(await file.arrayBuffer());
+  if (new TextDecoder().decode(original.slice(0, 5)) !== "%PDF-") return { ok: false, message: "That file isn't a PDF." };
+  const bytes = await withTitle(original, title.data);
 
   const path = `${new Date().getFullYear()}/${randomUUID()}.pdf`;
   const fileName = file.name.replace(/[^\w.\- ()]/g, "_").slice(0, 120) || "menu.pdf";
@@ -47,7 +67,7 @@ export async function uploadMenuPdf(formData: FormData): Promise<ActionResult> {
   if (upErr) { logActionError("menu-pdf", upErr); return { ok: false, message: "Upload failed. Please try again." }; }
 
   const { data: row, error } = await supabase.from("menus")
-    .insert({ title: title.data, file_path: path, file_name: fileName, size_bytes: file.size })
+    .insert({ title: title.data, file_path: path, file_name: fileName, size_bytes: bytes.length })
     .select("id").single();
   if (error || !row) {
     logActionError("menu-pdf", error);

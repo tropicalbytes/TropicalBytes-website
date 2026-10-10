@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink, FileText, Trash2, Upload } from "lucide-react";
-import { formatIST, MAX_MENU_PDF_BYTES, type ActionResult } from "@/lib/admin/shared";
+import { formatIST, MAX_MENU_PDF_BYTES, MAX_MENU_PDF_MB, type ActionResult } from "@/lib/admin/shared";
 import { Badge, Btn, Card, ConfirmDialog, Label, Status, TextInput, Toggle } from "@/components/admin/ui";
 import { deleteMenu, publishMenu, uploadMenuPdf } from "./actions";
 
@@ -35,7 +35,7 @@ export default function MenuPdfManager({ menus }: { menus: MenuPdf[] }) {
 
   const pick = (f: File | null) => {
     setResult(null);
-    if (f && f.size > MAX_MENU_PDF_BYTES) { setFile(null); if (fileRef.current) fileRef.current.value = ""; return setResult({ ok: false, message: "That file is over 5 MB." }); }
+    if (f && f.size > MAX_MENU_PDF_BYTES) { setFile(null); if (fileRef.current) fileRef.current.value = ""; return setResult({ ok: false, message: `That file is over ${MAX_MENU_PDF_MB} MB.` }); }
     setFile(f);
   };
   const upload = () => {
@@ -53,7 +53,7 @@ export default function MenuPdfManager({ menus }: { menus: MenuPdf[] }) {
         <h2 className="mb-3 font-display font-bold text-ink">Upload a new menu</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <Label text="Title" hint="Shown only here, e.g. “Week of 6 Oct”"><TextInput value={title} maxLength={120} onChange={(e) => setTitle(e.target.value)} /></Label>
-          <Label text="PDF file" hint="PDF only, up to 5 MB">
+          <Label text="PDF file" hint={`PDF only, up to ${MAX_MENU_PDF_MB} MB. Visitors download it named after the title.`}>
             <input ref={fileRef} type="file" accept="application/pdf,.pdf" onChange={(e) => pick(e.target.files?.[0] ?? null)}
               className="block w-full text-sm text-ink file:mr-3 file:rounded-xl file:border-0 file:bg-palegreen file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-forest hover:file:bg-sand" />
           </Label>

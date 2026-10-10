@@ -95,7 +95,9 @@ export const settingSchema = z.object({
   value: z.string().trim().min(1, "Can't be empty").max(500, "Keep it under 500 characters"),
 });
 
-export const MAX_MENU_PDF_BYTES = 5 * 1024 * 1024;
+/** 4 MB: uploads go through a server action and downloads through /menu.pdf, and Vercel caps both bodies at 4.5 MB. */
+export const MAX_MENU_PDF_MB = 4;
+export const MAX_MENU_PDF_BYTES = MAX_MENU_PDF_MB * 1024 * 1024;
 
 /** First zod issue as a sentence, prefixed with the field when useful. */
 export function firstIssue(error: z.ZodError): string {

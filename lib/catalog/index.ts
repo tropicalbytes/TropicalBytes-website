@@ -148,26 +148,33 @@ export const getLiveOffers = cache(async (): Promise<LiveOffer[]> => {
   }
 });
 
-const cachedMenuPdfUrl = sharedCache(
-  async (): Promise<string | null> => {
+export interface CurrentMenuPdf {
+  /** Supabase Storage address of the file. Server-side only: visitors get it through /menu.pdf. */
+  url: string;
+  /** The title the owner gave it in /admin (used as the download file name). */
+  title: string;
+}
+
+const cachedMenuPdf = sharedCache(
+  async (): Promise<CurrentMenuPdf | null> => {
     const config = requireConfig("menu-pdf");
     const client = createPublicClient(config, undefined, fetchOptions(CATALOG_REVALIDATE_SECONDS));
     const { data, error } = await withDeadline(
       "menu-pdf",
-      Promise.resolve(client.from("menus").select("file_path").eq("is_current", true).maybeSingle())
+      Promise.resolve(client.from("menus").select("file_path, title").eq("is_current", true).maybeSingle())
     );
     if (error) throw new Error(error.message);
-    return data ? client.storage.from("menus").getPublicUrl(data.file_path).data.publicUrl : null;
+    return data ? { url: client.storage.from("menus").getPublicUrl(data.file_path).data.publicUrl, title: data.title } : null;
   },
-  "menu-pdf-v1",
+  "menu-pdf-v2",
   CATALOG_REVALIDATE_SECONDS
 );
 
-/** Public URL of the menu PDF published in /admin, or null (callers fall back to the static file). */
-export const getCurrentMenuPdfUrl = cache(async (): Promise<string | null> => {
+/** The menu PDF published in /admin, or null (callers fall back to the static file). */
+export const getCurrentMenuPdf = cache(async (): Promise<CurrentMenuPdf | null> => {
   if (!supabasePublicConfig()) return null;
   try {
-    return await cachedMenuPdfUrl();
+    return await cachedMenuPdf();
   } catch (error) {
     console.error("[menu-pdf] using the static file:", describe(error));
     return null;
