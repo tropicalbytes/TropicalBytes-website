@@ -9,8 +9,16 @@ const NOTICES: Record<string, string> = {
   config: "The admin panel isn't configured on this deployment yet (Supabase environment variables are missing).",
 };
 
-export default function LoginPage({ searchParams }: { searchParams: { next?: string; error?: string; "signed-out"?: string } }) {
-  const notice = searchParams.error ? NOTICES[searchParams.error] : searchParams["signed-out"] ? "You've been signed out." : null;
+const EXPIRED: Record<string, string> = {
+  idle: "You were signed out after 24 hours without activity. Please sign in again.",
+  max: "Your session has ended. For security, the admin asks you to sign in again every 48 hours.",
+};
+
+export default function LoginPage({ searchParams }: { searchParams: { next?: string; error?: string; expired?: string; "signed-out"?: string } }) {
+  const notice = searchParams.error ? NOTICES[searchParams.error]
+    : searchParams.expired ? EXPIRED[searchParams.expired] ?? EXPIRED.max
+    : searchParams["signed-out"] === "all" ? "You've been signed out on all devices."
+    : searchParams["signed-out"] ? "You've been signed out." : null;
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">

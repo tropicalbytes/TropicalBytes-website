@@ -1,7 +1,10 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { requireAdmin } from "@/lib/admin/auth";
+import { SESSION_COOKIES, lastSeenCookie, signedInCookie } from "@/lib/admin/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type LoginState = { error: string | null; email: string };
@@ -38,11 +41,24 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
     await supabase.auth.signOut();
     return { error: "This account doesn't have admin access.", email };
   }
+  // Start the session clocks (lib/admin/session.ts).
+  const now = Date.now();
+  cookies().set(lastSeenCookie(now));
+  cookies().set(signedInCookie(now));
   redirect(safeNext(parsed.data.next));
 }
 
 export async function signOut() {
   const supabase = createSupabaseServerClient();
   await supabase.auth.signOut();
+  SESSION_COOKIES.forEach((name) => cookies().delete({ name, path: "/admin" }));
   redirect("/admin/login?signed-out=1");
+}
+
+/** Signs out every device signed in to this admin account, including this one. */
+export async function signOutEverywhere() {
+  const { supabase } = await requireAdmin();
+  await supabase.auth.signOut({ scope: "global" });
+  SESSION_COOKIES.forEach((name) => cookies().delete({ name, path: "/admin" }));
+  redirect("/admin/login?signed-out=all");
 }
