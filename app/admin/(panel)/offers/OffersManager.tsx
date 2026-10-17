@@ -6,6 +6,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { formatINR } from "@/lib/config";
 import { formatDateIST, type ActionResult } from "@/lib/admin/shared";
 import { Badge, Btn, Card, ConfirmDialog, Label, RupeeInput, Status, TextInput, Toggle } from "@/components/admin/ui";
+import { DatePicker } from "@/components/DatePicker";
 import { deleteOffer, saveOffer } from "./actions";
 
 export interface OfferData {
@@ -110,8 +111,8 @@ function OfferForm({ offer, pending, onSave, onCancel }: { offer?: OfferData; pe
       </div>
       <Label text="Description" className="mt-3"><TextInput value={description} maxLength={300} onChange={(e) => setDescription(e.target.value)} /></Label>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:max-w-md">
-        <Label text="Starts"><TextInput type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></Label>
-        <Label text="Ends" error={badDates ? "Must be on or after the start" : undefined}><TextInput type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} /></Label>
+        <Label text="Starts"><OfferDate value={startDate} onChange={setStartDate} /></Label>
+        <Label text="Ends" error={badDates ? "Must be on or after the start" : undefined}><OfferDate value={endDate} min={startDate || undefined} onChange={setEndDate} /></Label>
       </div>
       <div className="mt-3"><Toggle checked={active} onChange={setActive} label="Switched on" /></div>
       <div className="mt-4 flex justify-end gap-2">
@@ -125,5 +126,26 @@ function OfferForm({ offer, pending, onSave, onCancel }: { offer?: OfferData; pe
         </Btn>
       </div>
     </Card>
+  );
+}
+
+/**
+ * The website's date picker, for offer dates. It works in dd-mm-yyyy; offers
+ * store yyyy-mm-dd. A date can be cleared (empty = no limit).
+ */
+function OfferDate({ value, min, onChange }: { value: string; min?: string; onChange: (iso: string) => void }) {
+  const toIso = (v: string) => {
+    const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(v);
+    return m ? `${m[3]}-${m[2]}-${m[1]}` : "";
+  };
+  return (
+    <>
+      <DatePicker value={value} min={min} onChange={(v) => onChange(toIso(v))} placeholder="No limit" />
+      {value && (
+        <button type="button" onClick={() => onChange("")} className="mt-1 text-xs font-medium text-forest hover:underline">
+          Clear date
+        </button>
+      )}
+    </>
   );
 }
