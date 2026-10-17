@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/admin/ui";
 import ItemsManager, { type AdminItem } from "@/components/admin/ItemsManager";
 import { requireAdmin } from "@/lib/admin/auth";
-import { deleteMenuItem, moveMenuItem, saveMenuItem } from "./actions";
+import { deleteMenuItem, saveMenuItem, saveMenuOrder } from "./actions";
 
 export const metadata: Metadata = { title: "Menu Items" };
 
@@ -30,7 +30,7 @@ export default async function MenuItemsPage() {
         items={items}
         save={saveMenuItem}
         remove={deleteMenuItem}
-        move={moveMenuItem}
+        saveOrder={saveMenuOrder}
         tabs={[
           { key: "veg", label: "Veg" },
           { key: "non_veg", label: "Non-Veg" },

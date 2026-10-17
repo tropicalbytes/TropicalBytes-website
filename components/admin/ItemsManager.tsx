@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useEffect, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import { formatINR } from "@/lib/config";
 import { priceChange, type ActionResult, type PriceChange } from "@/lib/admin/shared";
 import { Badge, Btn, Card, ConfirmDialog, Label, RupeeInput, Status, TextInput, Toggle } from "./ui";
@@ -25,14 +25,14 @@ export interface AdminItem {
 type Kind = "menu" | "bulk";
 type Save = (input: unknown) => Promise<ActionResult>;
 type Remove = (id: unknown) => Promise<ActionResult>;
-type Move = (id: unknown, direction: unknown) => Promise<ActionResult>;
+type SaveOrder = (category: unknown, ids: unknown) => Promise<ActionResult>;
 
-export default function ItemsManager({ kind, tabs, items, save, remove, move }: {
+export default function ItemsManager({ kind, tabs, items, save, remove, saveOrder }: {
   kind: Kind;
   /** `deleteNote` is extra text shown when deleting an item from that tab. Plain data only (this is a client component). */
   tabs: { key: string; label: string; note?: ReactNode; deleteNote?: string }[];
   items: AdminItem[];
-  save: Save; remove: Remove; move: Move;
+  save: Save; remove: Remove; saveOrder: SaveOrder;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState(tabs[0].key);
@@ -40,8 +40,60 @@ export default function ItemsManager({ kind, tabs, items, save, remove, move }: 
   const [result, setResult] = useState<ActionResult | null>(null);
   const [deleting, setDeleting] = useState<AdminItem | null>(null);
   const [pending, start] = useTransition();
-  const list = items.filter((i) => i.category === tab);
   const current = tabs.find((t) => t.key === tab)!;
+
+  // Reordering is a local draft: arrows and drag move items instantly on
+  // screen, and nothing is saved until "Save order" (one save for the lot).
+  const tabItems = items.filter((i) => i.category === tab);
+  const [draft, setDraft] = useState<string[] | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [savedOrder, setSavedOrder] = useState(false);
+  const [leaveTo, setLeaveTo] = useState<string | null>(null);
+  const byId = new Map(tabItems.map((i) => [i.id, i]));
+  const list = draft ? draft.map((id) => byId.get(id)).filter((i): i is AdminItem => !!i) : tabItems;
+  const dirty = draft !== null;
+
+  const reorder = (from: number, to: number) => {
+    if (to < 0 || to >= list.length || from === to) return;
+    const ids = list.map((i) => i.id);
+    const [moved] = ids.splice(from, 1);
+    ids.splice(to, 0, moved);
+    // Back to the saved order = nothing to save.
+    setDraft(ids.join("|") === tabItems.map((i) => i.id).join("|") ? null : ids);
+    setResult(null);
+  };
+
+  // After a successful save, keep showing the draft until the refreshed list
+  // arrives, so the rows don't jump back for a moment.
+  useEffect(() => {
+    if (savedOrder) { setDraft(null); setSavedOrder(false); }
+  }, [items]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Warn before leaving the page (reload, close, or a link) with an unsaved order.
+  useEffect(() => {
+    if (!dirty) return;
+    const message = "You have an unsaved order. Leave without saving?";
+    const onBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    const onClick = (e: MouseEvent) => {
+      const link = (e.target as HTMLElement | null)?.closest("a[href]");
+      if (link && !link.getAttribute("href")?.startsWith("#") && !window.confirm(message)) { e.preventDefault(); e.stopPropagation(); }
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    document.addEventListener("click", onClick, true);
+    return () => { window.removeEventListener("beforeunload", onBeforeUnload); document.removeEventListener("click", onClick, true); };
+  }, [dirty]);
+
+  const switchTab = (key: string) => { setTab(key); setEditing(null); setResult(null); setDraft(null); };
+  const saveDraft = () => {
+    const ids = draft;
+    if (!ids) return;
+    start(async () => {
+      const res = await saveOrder(tab, ids);
+      setResult(res);
+      if (res.ok) { setSavedOrder(true); router.refresh(); }
+    });
+  };
+  const lockedTitle = dirty ? "Save or discard the new order first" : undefined;
 
   const run = (fn: () => Promise<ActionResult>, after?: () => void) =>
     start(async () => {
@@ -56,7 +108,7 @@ export default function ItemsManager({ kind, tabs, items, save, remove, move }: 
         {tabs.map((t) => {
           const n = items.filter((i) => i.category === t.key).length;
           return (
-            <button key={t.key} type="button" onClick={() => { setTab(t.key); setEditing(null); setResult(null); }}
+            <button key={t.key} type="button" onClick={() => { if (t.key === tab) return; if (dirty) setLeaveTo(t.key); else switchTab(t.key); }}
               className={`flex-1 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${tab === t.key ? "bg-forest text-white" : "text-ink hover:bg-palegreen"}`}>
               {t.label} <span className="opacity-70">({n})</span>
             </button>
@@ -65,11 +117,16 @@ export default function ItemsManager({ kind, tabs, items, save, remove, move }: 
       </div>
 
       {current.note && <p className="mb-4 text-sm text-ink-secondary">{current.note}</p>}
+      {list.length > 1 && (
+        <p className="mb-3 text-xs text-ink-secondary">
+          To change the order, use the arrows<span className="hidden sm:inline"> or drag items by the handle</span>, then press <strong className="font-semibold text-ink">Save order</strong>.
+        </p>
+      )}
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Status result={result} />
         {editing !== "new" && (
-          <Btn className="ml-auto" onClick={() => { setEditing("new"); setResult(null); }}><Plus size={16} /> Add item</Btn>
+          <Btn className="ml-auto" disabled={dirty} title={lockedTitle} onClick={() => { setEditing("new"); setResult(null); }}><Plus size={16} /> Add item</Btn>
         )}
       </div>
 
@@ -83,7 +140,18 @@ export default function ItemsManager({ kind, tabs, items, save, remove, move }: 
         {list.length === 0 && <p className="p-5 text-sm text-ink-secondary">No items yet.</p>}
         <ul className="divide-y divide-sand">
           {list.map((item, i) => (
-            <li key={item.id} className={item.isActive ? "" : "bg-cream"}>
+            <li key={item.id}
+              draggable={editing === null && !pending}
+              onDragStart={(e) => { setDragId(item.id); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", item.id); }}
+              onDragOver={(e) => {
+                if (!dragId) return;
+                e.preventDefault();
+                const from = list.findIndex((x) => x.id === dragId);
+                if (from !== i) reorder(from, i);
+              }}
+              onDrop={(e) => e.preventDefault()}
+              onDragEnd={() => setDragId(null)}
+              className={`transition-colors ${dragId === item.id ? "bg-palegreen opacity-60" : item.isActive ? "" : "bg-cream"}`}>
               {editing === item.id ? (
                 <div className="p-3 sm:p-4">
                   <ItemForm kind={kind} category={tab} categories={tabs} item={item} pending={pending}
@@ -92,9 +160,10 @@ export default function ItemsManager({ kind, tabs, items, save, remove, move }: 
                 </div>
               ) : (
                 <div className="flex items-center gap-3 px-3 py-3 sm:px-4">
+                  <span className="hidden cursor-grab text-ink-secondary/60 hover:text-forest active:cursor-grabbing sm:block" title="Drag to reorder" aria-hidden="true"><GripVertical size={16} /></span>
                   <div className="flex flex-col">
-                    <button type="button" aria-label={`Move ${item.name} up`} disabled={pending || i === 0} onClick={() => run(() => move(item.id, "up"))} className="rounded p-0.5 text-ink-secondary hover:text-forest disabled:opacity-30"><ArrowUp size={15} /></button>
-                    <button type="button" aria-label={`Move ${item.name} down`} disabled={pending || i === list.length - 1} onClick={() => run(() => move(item.id, "down"))} className="rounded p-0.5 text-ink-secondary hover:text-forest disabled:opacity-30"><ArrowDown size={15} /></button>
+                    <button type="button" aria-label={`Move ${item.name} up`} disabled={pending || editing !== null || i === 0} onClick={() => reorder(i, i - 1)} className="rounded p-0.5 text-ink-secondary hover:text-forest disabled:opacity-30"><ArrowUp size={15} /></button>
+                    <button type="button" aria-label={`Move ${item.name} down`} disabled={pending || editing !== null || i === list.length - 1} onClick={() => reorder(i, i + 1)} className="rounded p-0.5 text-ink-secondary hover:text-forest disabled:opacity-30"><ArrowDown size={15} /></button>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -110,8 +179,8 @@ export default function ItemsManager({ kind, tabs, items, save, remove, move }: 
                     {kind === "bulk" && item.price !== null && <span className="font-normal text-ink-secondary">/{item.unit}</span>}
                   </span>
                   <div className="flex shrink-0 gap-1">
-                    <button type="button" aria-label={`Edit ${item.name}`} onClick={() => { setEditing(item.id); setResult(null); }} className="rounded-lg p-2 text-ink-secondary hover:bg-palegreen hover:text-forest"><Pencil size={16} /></button>
-                    <button type="button" aria-label={`Delete ${item.name}`} onClick={() => setDeleting(item)} className="rounded-lg p-2 text-ink-secondary hover:bg-danger-light hover:text-danger"><Trash2 size={16} /></button>
+                    <button type="button" aria-label={`Edit ${item.name}`} title={lockedTitle} disabled={dirty} onClick={() => { setEditing(item.id); setResult(null); }} className="rounded-lg p-2 text-ink-secondary hover:bg-palegreen hover:text-forest disabled:pointer-events-none disabled:opacity-30"><Pencil size={16} /></button>
+                    <button type="button" aria-label={`Delete ${item.name}`} title={lockedTitle} disabled={dirty} onClick={() => setDeleting(item)} className="rounded-lg p-2 text-ink-secondary hover:bg-danger-light hover:text-danger disabled:pointer-events-none disabled:opacity-30"><Trash2 size={16} /></button>
                   </div>
                 </div>
               )}
@@ -119,6 +188,29 @@ export default function ItemsManager({ kind, tabs, items, save, remove, move }: 
           ))}
         </ul>
       </Card>
+
+      {dirty && (
+        <div role="region" aria-label="Unsaved order" className="sticky bottom-4 z-30 mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-forest/30 bg-white p-3 shadow-[0_12px_40px_-12px_rgba(7,91,42,0.35)] sm:px-5 sm:py-4">
+          <p className="text-sm text-ink">
+            <span className="font-semibold">Order changed.</span>{" "}
+            <span className="text-ink-secondary">Save to update the website.</span>
+          </p>
+          <div className="ml-auto flex gap-2">
+            <Btn tone="secondary" disabled={pending} onClick={() => { setDraft(null); setResult(null); }}>Discard</Btn>
+            <Btn busy={pending} onClick={saveDraft}>Save order</Btn>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={leaveTo !== null}
+        title="Discard the new order?"
+        body="You've changed the order on this tab but haven't saved it."
+        confirmLabel="Discard changes"
+        tone="danger"
+        onCancel={() => setLeaveTo(null)}
+        onConfirm={() => { const to = leaveTo!; setLeaveTo(null); switchTab(to); }}
+      />
 
       <ConfirmDialog
         open={deleting !== null}

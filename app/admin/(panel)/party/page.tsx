@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/admin/ui";
 import ItemsManager, { type AdminItem } from "@/components/admin/ItemsManager";
 import { requireAdmin } from "@/lib/admin/auth";
-import { deleteBulkItem, moveBulkItem, saveBulkItem } from "./actions";
+import { deleteBulkItem, saveBulkItem, saveBulkOrder } from "./actions";
 
 export const metadata: Metadata = { title: "Party & Bulk" };
 
@@ -31,7 +31,7 @@ export default async function PartyPage() {
         items={items}
         save={saveBulkItem}
         remove={deleteBulkItem}
-        move={moveBulkItem}
+        saveOrder={saveBulkOrder}
         tabs={[{ key: "veg", label: "Veg" }, { key: "non_veg", label: "Non-Veg" }]}
       />
     </>

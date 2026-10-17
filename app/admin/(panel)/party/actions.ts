@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin/auth";
-import { CATEGORY_LABELS, moveItem, placement } from "@/lib/admin/items";
+import { CATEGORY_LABELS, placement, saveOrder } from "@/lib/admin/items";
 import { logActionError, revalidateAfterCatalogWrite } from "@/lib/admin/server";
 import { bulkItemSchema, firstIssue, friendlyDbError, type ActionResult } from "@/lib/admin/shared";
 
@@ -35,12 +35,12 @@ export async function deleteBulkItem(id: unknown): Promise<ActionResult> {
   return { ok: true, message: "Item deleted." };
 }
 
-export async function moveBulkItem(id: unknown, direction: unknown): Promise<ActionResult> {
+export async function saveBulkOrder(category: unknown, ids: unknown): Promise<ActionResult> {
   const { supabase } = await requireAdmin();
-  const parsed = z.tuple([z.string().min(1), z.enum(["up", "down"])]).safeParse([id, direction]);
+  const parsed = z.tuple([z.enum(["veg", "non_veg"]), z.array(z.string().min(1)).max(500)]).safeParse([category, ids]);
   if (!parsed.success) return { ok: false, message: firstIssue(parsed.error) };
-  const err = await moveItem(supabase, "bulk_items", ...parsed.data);
-  if (err) return { ok: false, message: err };
+  const err = await saveOrder(supabase, "bulk_items", ...parsed.data);
+  if (err) { logActionError("party", err); return { ok: false, message: err }; }
   revalidateAfterCatalogWrite(PATH);
-  return { ok: true, message: "Order updated." };
+  return { ok: true, message: "Order saved." };
 }
