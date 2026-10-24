@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { business, faqs } from "@/lib/config";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
-import { isRequired, isValidEmail, isValidPhone, maxLength, validate } from "@/lib/validation";
+import { isRequired, isOptionalEmail, isValidPhone, maxLength, validate } from "@/lib/validation";
 import { REQUEST_TYPES, MAX_LENGTHS } from "@/lib/constants";
 import { Button } from "@/components/Button";
 import ErrorMessage from "@/components/ErrorMessage";
@@ -40,7 +40,7 @@ export default function ContactPage() {
       {
         fullName: [isRequired, maxLength(MAX_LENGTHS.name)],
         phone: [isRequired, isValidPhone],
-        email: [isRequired, isValidEmail],
+        email: [isOptionalEmail],
         message: [isRequired, maxLength(MAX_LENGTHS.message)],
       },
       {

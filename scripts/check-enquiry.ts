@@ -138,5 +138,13 @@ const contact = build({ requestType: REQUEST_TYPES.CONTACT, ...person, message: 
 ok(sheetRow(contact, true).res.status === "ok" && sheetRow(contact, false).res.status === "ok", "contact enquiry passes through (signed + legacy)");
 ok(!buildEnquiry({ requestType: "Bogus" }, catalog).ok, "unknown request type rejected");
 
+// ---------------------------------------------------------------- email is optional on every form
+for (const [name, payload] of [["subscription", sub], ["individual", meal], ["party", party], ["contact", contact]] as const) {
+  const noEmail = { ...payload, email: "" };
+  const legacy = sheetRow(noEmail, false), signed = sheetRow(noEmail, true);
+  ok(legacy.res.status === "ok" && signed.res.status === "ok" && signed.row?.[5] === "", `${name}: accepted without an email (legacy + signed), Email cell left blank`);
+  ok(sheetRow({ ...payload, email: "not-an-email" }, true).res.status === "error", `${name}: an invalid email is still rejected`);
+}
+
 console.log(failed ? `\n${failed} check(s) failed` : "\nall enquiry checks passed");
 process.exit(failed ? 1 : 0);

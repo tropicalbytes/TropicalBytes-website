@@ -6,7 +6,7 @@ import { business, formatINR } from "@/lib/config";
 import type { CatalogPlanOption, CatalogTier } from "@/lib/catalog/core";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
 import { REQUEST_TYPES, MAX_FUTURE_DATE_DAYS, MAX_LENGTHS, MEAL_PREFERENCE_OPTIONS, FOOD_PREFERENCE_OPTIONS } from "@/lib/constants";
-import { isRequired, isValidEmail, isValidPhone, isValidPincode, isFutureOrTodayDate, isWithinFutureWindow, maxLength, validate } from "@/lib/validation";
+import { isRequired, isOptionalEmail, isValidPhone, isValidPincode, isFutureOrTodayDate, isWithinFutureWindow, maxLength, validate } from "@/lib/validation";
 import SuccessScreen from "@/components/SuccessScreen";
 import ErrorMessage from "@/components/ErrorMessage";
 import { CardHeader, IconInput, IconTextarea, Field, SelectPill, FORM_CARD_CLASS } from "@/components/FormKit";
@@ -93,7 +93,7 @@ export default function SubscribeForm({ tiers, planOptions }: { tiers: CatalogTi
       },
     },
     1: {
-      rules: { fullName: [isRequired, maxLength(MAX_LENGTHS.name)], phone: [isRequired, isValidPhone], email: [isRequired, isValidEmail] },
+      rules: { fullName: [isRequired, maxLength(MAX_LENGTHS.name)], phone: [isRequired, isValidPhone], email: [isOptionalEmail] },
       messages: {
         fullName: "Please enter your full name.",
         phone: "Enter a valid 10-digit phone number.",
@@ -390,7 +390,7 @@ export default function SubscribeForm({ tiers, planOptions }: { tiers: CatalogTi
               <ReviewGroup title="Your Details" onEdit={() => goToStep(1)}>
                 <ReviewRow label="Name" value={values.fullName} />
                 <ReviewRow label="Phone" value={values.phone} />
-                <ReviewRow label="Email" value={values.email} />
+                <ReviewRow label="Email" value={values.email || "Not provided"} />
               </ReviewGroup>
 
               <ReviewGroup title="Delivery Details" onEdit={() => goToStep(2)}>

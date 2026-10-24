@@ -5,7 +5,7 @@ import MultiSelectCombobox from "@/components/MultiSelectCombobox";
 import { business, formatINR, type MenuOptionGroup } from "@/lib/config";
 import type { Catalog, CatalogMenuItem } from "@/lib/catalog/core";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
-import { isRequired, isValidEmail, isValidPhone, maxLength, validate } from "@/lib/validation";
+import { isRequired, isOptionalEmail, isValidPhone, maxLength, validate } from "@/lib/validation";
 import { REQUEST_TYPES, MAX_LENGTHS } from "@/lib/constants";
 import SuccessScreen from "@/components/SuccessScreen";
 import ErrorMessage from "@/components/ErrorMessage";
@@ -253,7 +253,7 @@ export default function RequestForm({ menu }: { menu: Catalog["menu"] }) {
       {
         fullName: [isRequired, maxLength(MAX_LENGTHS.name)],
         phone: [isRequired, isValidPhone],
-        email: [isRequired, isValidEmail],
+        email: [isOptionalEmail],
         foodPreference: [isRequired],
         location: [isRequired],
         selectedItems: [isRequired],

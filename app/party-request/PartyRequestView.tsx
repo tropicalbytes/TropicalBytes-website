@@ -7,7 +7,7 @@ import MultiSelectCombobox from "@/components/MultiSelectCombobox";
 import { business, formatINR, type MenuOptionGroup } from "@/lib/config";
 import type { Catalog, CatalogPartyItem } from "@/lib/catalog/core";
 import { submitToGoogleSheets, newClientRequestId } from "@/lib/submitForm";
-import { isRequired, isValidEmail, isValidPhone, isFutureOrTodayDate, isWithinFutureWindow, maxLength, validate } from "@/lib/validation";
+import { isRequired, isOptionalEmail, isValidPhone, isFutureOrTodayDate, isWithinFutureWindow, maxLength, validate } from "@/lib/validation";
 import { REQUEST_TYPES, MAX_FUTURE_DATE_DAYS, MAX_LENGTHS } from "@/lib/constants";
 import SuccessScreen from "@/components/SuccessScreen";
 import ErrorMessage from "@/components/ErrorMessage";
@@ -148,7 +148,7 @@ export default function PartyRequestView({ party }: { party: Catalog["party"] })
       {
         fullName: [isRequired, maxLength(MAX_LENGTHS.name)],
         phone: [isRequired, isValidPhone],
-        email: [isRequired, isValidEmail],
+        email: [isOptionalEmail],
         eventDate: [isRequired, isFutureOrTodayDate, isWithinFutureWindow(MAX_FUTURE_DATE_DAYS)],
         location: [isRequired],
         selectedItems: [isRequired],

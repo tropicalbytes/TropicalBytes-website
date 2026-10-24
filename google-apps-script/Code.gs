@@ -340,7 +340,7 @@ function validateAndNormalize(requestType, raw, signed) {
 
   check(isNonEmptyString(fullName) && withinLength(fullName, MAX_LENGTHS.name), "fullName");
   check(isValidPhone(phone), "phone");
-  check(isValidEmail(email), "email");
+  check(email === "" || isValidEmail(email), "email"); // email is optional; if given it must be valid
 
   const base = {
     requestType: requestType,

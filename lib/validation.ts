@@ -70,6 +70,9 @@ export const isValidEmail = (value: string): boolean => {
   return true;
 };
 
+/** Email is optional on every form: empty is fine; anything typed must still be a valid address. */
+export const isOptionalEmail = (value: string): boolean => value.trim() === "" || isValidEmail(value);
+
 // Accepts Indian 10-digit numbers, optionally with +91 / 0 prefix, spaces or dashes.
 export const isValidPhone = (value: string) => {
   const digits = value.replace(/[\s-]/g, "");
